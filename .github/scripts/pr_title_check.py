@@ -9,14 +9,16 @@ import sys
 
 ALLOWED_TYPES = {
     "build",
+    "chore",
     "ci",
     "docs",
     "feat",
     "fix",
     "perf",
     "refactor",
+    "revert",
+    "style",
     "test",
-    "chore",
 }
 SCOPE_CHARS = set(string.ascii_letters + string.digits + "_.-")
 
@@ -27,14 +29,18 @@ def fail(title: str, message: str) -> None:
 
 
 def validate_title(pr_title: str) -> None:
-    # Expected format: <type>(<scope>): <short summary>
+    # Expected format: <type>[(<scope>)][!]: <short summary>
     if ": " not in pr_title:
         fail(
             "Invalid pull request title",
-            f"PR title '{pr_title}' does not match '<type>(<scope>): <short summary>'.",
+            f"PR title '{pr_title}' does not match '<type>(<scope>)!: <short summary>'.",
         )
 
     head, summary = pr_title.split(": ", 1)
+
+    # Conventional Commits breaking change indicator, e.g. 'feat!' or 'feat(api)!'.
+    if head.endswith("!"):
+        head = head[:-1]
 
     if not summary:
         fail("Invalid pull request summary", "Summary must not be empty.")
@@ -73,19 +79,28 @@ def validate_title(pr_title: str) -> None:
         if not scope:
             fail("Invalid pull request title", "Scope must not be empty.")
 
-        for ch in scope:
-            if ch not in SCOPE_CHARS:
-                fail(
-                    "Invalid pull request title",
-                    "Scope can only contain letters, digits, '_', '.', and '-'.",
-                )
+        # Allow multiple comma-separated scopes, e.g. (a.c, b.c).
+        for sub_scope in scope.split(","):
+            sub_scope = sub_scope.strip()
+
+            if not sub_scope:
+                fail("Invalid pull request title", "Each scope must not be empty.")
+
+            for ch in sub_scope:
+                if ch not in SCOPE_CHARS:
+                    fail(
+                        "Invalid pull request title",
+                        "Scope can only contain letters, digits, '_', '.', and '-' "
+                        "(use ', ' to separate multiple scopes).",
+                    )
     else:
         title_type = head
 
     if title_type not in ALLOWED_TYPES:
         fail(
             "Invalid pull request title",
-            "Allowed types: build, ci, docs, feat, fix, perf, refactor, test, chore.",
+            "Allowed types: build, chore, ci, docs, feat, fix, perf, refactor, "
+            "revert, style, test.",
         )
 
 

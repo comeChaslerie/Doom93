@@ -10,7 +10,7 @@ on:
 
 jobs:
   verify-commit-name:
-    name: Check if the commit title is valid according to Angular's convention
+    name: Check if the commit title is valid according to the Conventional Commits specification
     runs-on: ubuntu-latest
 
     steps:
@@ -22,14 +22,14 @@ jobs:
       - name: Commit Norm Checker
         run: |
           commit_msg=$(git log --format=%B -n 1 ${{ github.sha }})
-          keyword_regex="^([a-z]+\([0-9A-Za-z_.-]+\)|^[a-z]+): [0-9a-z_.-]+"
+          keyword_regex="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([0-9A-Za-z_.-]+( *, *[0-9A-Za-z_.-]+)*\))?!?: [0-9a-z]"
 
           if [[ ! $commit_msg =~ $keyword_regex ]]; then
             if [[ $commit_msg =~ ^Merge\ .* ]]; then
               echo "Skipping merge commit"
             else
               echo $commit_msg
-              echo "Commit message does not match Angular convention."
+              echo "Commit message does not match the Conventional Commits specification."
               exit 1
             fi
           fi
