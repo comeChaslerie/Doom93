@@ -1,0 +1,9 @@
+*
+
+!*/
+
+!.gitignore
+!.github/*
+!*.md
+!*.py
+!*.yml
