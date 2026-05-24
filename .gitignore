@@ -3,6 +3,7 @@
 !*/
 
 !.gitignore
+!.gitmodules
 !.github/*
 !*.md
 !*.py

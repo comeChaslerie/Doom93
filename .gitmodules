@@ -1,0 +1,3 @@
+[submodule "EngineSquared"]
+	path = EngineSquared
+	url = https://github.com/EngineSquared/EngineSquared.git
