@@ -1,0 +1,196 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  release:
+    types: [ published ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.base_ref }}-${{
+    github.head_ref }}
+  cancel-in-progress: true
+
+env:
+  UNWANTED_REGEX: "^(?!.*tests\\/).*gc(no|da|ov)$|(.*\\.(a|o|so|lib))$|(.*~)$|^(#\
+    .*#)$|^tmp\\/.*|.*\\/tmp\\/.*"
+
+jobs:
+  check_repository_cleanliness:
+    if: ${{ github.event_name != 'pull_request' || (!startsWith(github.head_ref,
+      'ga-ignore-') && github.head_ref != 'gh-pages') }}
+    name: Checks if the repository is clean and void of any unwanted files (temp
+      files, binary files, etc.)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Find unwanted files
+        run: |
+          UNWANTED_FILES=$(find . -path ./EngineSquared -prune -o -type f -printf '%P\n' | grep -P "${{ env.UNWANTED_REGEX }}" || true)
+          if [ -n "$UNWANTED_FILES" ]; then
+            while IFS= read -r LINE; do
+              echo "::error file=${LINE},line=1,col=1,title=Unwanted file detected::${LINE}"
+            done <<< "$UNWANTED_FILES"
+            echo "FAIL_TASK=true" >> "$GITHUB_ENV"
+            exit 1
+          else
+            echo "FAIL_TASK=false" >> "$GITHUB_ENV"
+          fi
+
+  lint_code:
+    name: Lint with clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install clang-format
+        run: |
+          sudo apt update
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 22
+          sudo apt install clang-format-22
+
+      - name: Install xmake
+        uses: xmake-io/github-action-setup-xmake@fadadea1162ec75ce1541d5bb68226fb147c221e
+        with:
+          xmake-version: latest
+          actions-cache-folder: ".xmake-cache"
+          actions-cache-key: "clang-format"
+          build-cache: true
+          build-cache-key: "clang-format"
+
+      - name: Run clang-format
+        run: |
+          xmake format -c
+
+  tidy:
+    name: Run clang-tidy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install clang-tidy
+        run: |
+          sudo apt update
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 22
+          sudo apt install -y clang-tidy
+
+      - name: Install xmake
+        uses: xmake-io/github-action-setup-xmake@fadadea1162ec75ce1541d5bb68226fb147c221e
+        with:
+          xmake-version: latest
+          actions-cache-folder: ".xmake-cache"
+          actions-cache-key: "clang-tidy"
+          build-cache: true
+          build-cache-key: "clang-tidy"
+      - name: Run clang-tidy
+        run: |
+          xmake check -y clang.tidy --configfile=./.clang-tidy
+
+  check_program_compilation:
+    name: Build and verify binaries
+    needs: [ check_repository_cleanliness, lint_code ]
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Linux dependencies
+        if: contains(runner.os, 'linux')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev mesa-utils
+
+      - name: Install xmake
+        uses: xmake-io/github-action-setup-xmake@fadadea1162ec75ce1541d5bb68226fb147c221e
+        with:
+          xmake-version: latest
+          actions-cache-folder: ".xmake-cache"
+          actions-cache-key: "${{ matrix.os }}-compilation"
+          build-cache: true
+          build-cache-key: "${{ matrix.os }}-compilation"
+
+      - name: Build project
+        run: |
+          xmake f -y
+          xmake build -y
+        timeout-minutes: 30
+
+  run_tests:
+    name: Run tests
+    needs: [ check_repository_cleanliness, lint_code ]
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Linux test dependencies
+        if: contains(runner.os, 'linux')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev mesa-utils
+          sudo apt-get install -y python3 python3-pip
+          pip3 install gcovr
+
+      - name: Install xmake
+        uses: xmake-io/github-action-setup-xmake@fadadea1162ec75ce1541d5bb68226fb147c221e
+        with:
+          xmake-version: latest
+          actions-cache-folder: ".xmake-cache"
+          actions-cache-key: "${{ matrix.os }}-tests"
+          build-cache: true
+          build-cache-key: "${{ matrix.os }}-tests"
+
+      - name: Clean build artifact
+        run: |
+          xmake clean -a
+
+      - name: Run tests
+        run: |
+          xmake f -y -m debug
+          xmake test -y -v
+        timeout-minutes: 30
+
+      - name: Check test coverage (Linux)
+        if: contains(runner.os, 'linux')
+        uses: threeal/gcovr-action@1b53388d5f84b4f3afb1b9082782961dff911ba0
+
+      - name: Check memory leaks (macOS)
+        if: contains(runner.os, 'macos')
+        run: |
+          xmake check_leaks
+        timeout-minutes: 30
+
+      - name: Clear test artifacts
+        if: contains(runner.os, 'linux')
+        run: |
+          xmake clean -y
