@@ -4,6 +4,8 @@
 
 !.gitignore
 !.gitmodules
+!.clang-format
+!.clang-tidy
 !.github/*
 !*.md
 !*.py
