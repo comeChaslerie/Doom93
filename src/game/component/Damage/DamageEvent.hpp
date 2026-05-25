@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/component/DamageType.hpp"
+#include "game/component/Damage/DamageType.hpp"
 
 namespace game::component {
 struct DamageEvent {
