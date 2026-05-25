@@ -2,10 +2,10 @@
 #include "core/Core.hpp"
 #include "entity/Entity.hpp"
 #include "fmt/format.h"
-#include "game/component/DamageEvent.hpp"
-#include "game/component/DamageType.hpp"
+#include "game/component/Damage/DamageEvent.hpp"
+#include "game/component/Damage/DamageType.hpp"
 #include "game/component/Health.hpp"
-#include "game/system/ApplyDamage.hpp"
+#include "game/system/ApplyDamage/ApplyDamage.hpp"
 #include "scheduler/Startup.hpp"
 #include "scheduler/Update.hpp"
 

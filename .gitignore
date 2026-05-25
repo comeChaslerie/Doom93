@@ -13,3 +13,5 @@
 !*.cpp
 !*.hpp
 !*.lua
+
+*.cpp.cpp
