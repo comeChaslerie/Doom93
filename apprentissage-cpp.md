@@ -88,8 +88,8 @@ Phase 2 (exos 4–12) : classes, RAII, généricité, polymorphisme, puis un cap
 
 | # | Titre | Concept C++ central | Livrable jeu |
 | - | --- | --- | --- |
-| 1 | Composant `Health` + système `ApplyDamage` | namespaces, `enum class`, références | base vie/dégâts |
-| 2 | Dégâts multi-sources | `const`-correctness, surcharge, args par défaut | dégâts typés |
+| ✅ 1 | Composant `Health` + système `ApplyDamage` | namespaces, `enum class`, références | base vie/dégâts |
+| ✅ 2 | Dégâts multi-sources | `const`-correctness, surcharge, args par défaut | dégâts typés |
 | 3 | Inventaire de munitions | conteneurs STL, `range-for`, `std::optional` | stock de munitions |
 | 4 | Classe `Stat` bornée | classes, encapsulation, invariants | vie/armure robustes |
 | 5 | Possession de ressource | RAII, `unique_ptr`, move, règle de 0/5 | handle texture/son |
@@ -103,7 +103,7 @@ Phase 2 (exos 4–12) : classes, RAII, généricité, polymorphisme, puis un cap
 
 ---
 
-## Exercice 1 — Composant `Health` + système `ApplyDamage`
+## Exercice 1 — Composant `Health` + système `ApplyDamage` ✅
 
 **Objectif C++** : `namespace`, `enum class`, **références** (`T&`) vs pointeurs, `auto`,
 initialisation par défaut des membres, `fmt`/log au lieu de `printf`.
@@ -136,7 +136,7 @@ fonction `apply_damage(Health*, int)`). Qu'est-ce que l'ECS t'apporte ? (répons
 
 ---
 
-## Exercice 2 — Dégâts multi-sources (const-correctness & surcharge)
+## Exercice 2 — Dégâts multi-sources (const-correctness & surcharge) ✅
 
 **Objectif C++** : `const`-correctness (`const T&` pour lecture seule), **surcharge de
 fonctions**, **arguments par défaut**, `[[nodiscard]]`.
