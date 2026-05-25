@@ -4,6 +4,5 @@
 
 namespace game::system {
 [[nodiscard]] float ComputeDamage(float base, component::DamageType type);
-[[nodiscard]] float ComputeDamage(float base, component::DamageType type,
-    float distance, float falloff = 1.0f);
-}
+[[nodiscard]] float ComputeDamage(float base, component::DamageType type, float distance, float falloff = 1.0f);
+} // namespace game::system
