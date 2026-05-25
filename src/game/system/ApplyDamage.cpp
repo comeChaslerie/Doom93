@@ -3,7 +3,8 @@
 #include "game/component/Health.hpp"
 #include <algorithm>
 
-void game::system::ApplyDamage(Engine::Core &core) {
+void game::system::ApplyDamage(Engine::Core &core)
+{
     auto &registery = core.GetRegistry();
 
     registery.view<component::Health, component::DamageEvent>().each([](component::Health &health, component::DamageEvent &event) {

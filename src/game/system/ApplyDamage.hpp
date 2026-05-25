@@ -2,6 +2,7 @@
 
 #include "core/Core.hpp"
 
-namespace game::system {
+namespace game::system
+{
     void ApplyDamage(Engine::Core &core);
 }

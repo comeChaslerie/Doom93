@@ -1,6 +1,7 @@
 #pragma once
 
-namespace game::component {
+namespace game::component
+{
     enum class DamageType {
         Hitscan,
         Projectile,
