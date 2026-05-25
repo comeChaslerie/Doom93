@@ -1,6 +1,7 @@
-#include "game/system/ApplyDamage.hpp"
-#include "game/component/DamageEvent.hpp"
+#include "game/system/ApplyDamage/ApplyDamage.hpp"
+#include "game/component/Damage/DamageEvent.hpp"
 #include "game/component/Health.hpp"
+#include "game/system/ComputeDamage/ComputeDamage.hpp"
 #include <algorithm>
 
 void game::system::ApplyDamage(Engine::Core &core)
@@ -9,7 +10,7 @@ void game::system::ApplyDamage(Engine::Core &core)
 
     registery.view<component::Health, component::DamageEvent>().each(
         [](component::Health &health, component::DamageEvent &event) {
-            health.current -= event.amount;
+            health.current -= ComputeDamage(event.amount, event.type);
             health.current = std::max(health.current, 0.f);
         });
     registery.clear<component::DamageEvent>();
