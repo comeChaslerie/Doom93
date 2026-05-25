@@ -23,9 +23,8 @@ int main()
     });
     core.RegisterSystem<Engine::Scheduler::Update>(game::system::ApplyDamage);
     core.RegisterSystem<Engine::Scheduler::Update>([](Engine::Core &core) {
-        core.GetRegistry().view<Health>().each([](Health &health) {
-            Log::Info(fmt::format("After : {}/{} PV", health.current, health.max));
-        });
+        core.GetRegistry().view<Health>().each(
+            [](Health &health) { Log::Info(fmt::format("After : {}/{} PV", health.current, health.max)); });
         core.Stop();
     });
     core.Run();
