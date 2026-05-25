@@ -32,7 +32,11 @@ for _, file in ipairs(os.files("tests/**.cpp")) do
         add_includedirs("src/")
         add_files(file)
         add_files("tests/main.cpp")
-        add_files("src/game/system/ComputeDamage/ComputeDamage.cpp")
+        -- derive the source under test: tests/<path>/FooTests.cpp -> src/<path>/Foo.cpp
+        local src = path.join("src", path.relative(path.directory(file), "tests"), name:gsub("Tests$", "") .. ".cpp")
+        if os.isfile(src) then
+            add_files(src)
+        end
         target_end()
     end
 end
