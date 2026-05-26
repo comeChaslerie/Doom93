@@ -1,8 +1,9 @@
 #pragma once
 
+#include "game/component/Stat/Stat.hpp"
+
 namespace game::component {
 struct Health {
-    float current = 100.0f;
-    float max = 100.0f;
+    Stat hp{100.f};
 };
 } // namespace game::component
