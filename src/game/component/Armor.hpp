@@ -3,7 +3,7 @@
 #include "game/component/Stat/Stat.hpp"
 
 namespace game::component {
-struct Health {
-    Stat hp{100.f};
+struct Armor {
+    Stat armor{0.f};
 };
 } // namespace game::component

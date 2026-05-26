@@ -19,12 +19,12 @@ int main()
         Engine::Entity entity = core.CreateEntity();
         Health &health = entity.AddComponent<Health>();
         entity.AddComponent<DamageEvent>(25.f, DamageType::Hitscan);
-        Log::Info(fmt::format("Spawn : {}/{} PV", health.current, health.max));
+        Log::Info(fmt::format("Spawn : {}/{} PV", health.hp.Current(), health.hp.Max()));
     });
     core.RegisterSystem<Engine::Scheduler::Update>(game::system::ApplyDamage);
     core.RegisterSystem<Engine::Scheduler::Update>([](Engine::Core &core) {
         core.GetRegistry().view<Health>().each(
-            [](Health &health) { Log::Info(fmt::format("After : {}/{} PV", health.current, health.max)); });
+            [](Health &health) { Log::Info(fmt::format("After : {}/{} PV", health.hp.Current(), health.hp.Max())); });
         core.Stop();
     });
     core.Run();
