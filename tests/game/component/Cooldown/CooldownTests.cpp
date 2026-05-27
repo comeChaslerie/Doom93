@@ -46,8 +46,8 @@ TEST(Cooldown, RetriggerRefreshesRemaining)
     Cooldown cd(0.5f);
 
     cd.Trigger();
-    cd.Tick(0.3f);  // remaining = 0.2
-    cd.Trigger();   // re-trigger en plein cooldown
+    cd.Tick(0.3f); // remaining = 0.2
+    cd.Trigger();  // re-trigger en plein cooldown
     EXPECT_FALSE(cd.Ready());
     EXPECT_FLOAT_EQ(cd.Remaining().Value(), 0.5f); // reparti a duration
 }
