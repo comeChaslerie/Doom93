@@ -23,6 +23,7 @@ TEST(TextureHandle, MoveCtorTransfersOwnership)
     TextureHandle a(42);
     TextureHandle b(std::move(a));
     EXPECT_EQ(b.Id(), 42);
+    // NOLINTNEXTLINE(bugprone-use-after-move) -- intentionnel : on verifie l'etat moved-from
     EXPECT_EQ(a.Id(), -1);
 }
 
@@ -32,6 +33,7 @@ TEST(TextureHandle, MoveAssignTransfersOwnership)
     TextureHandle b(2);
     b = std::move(a);
     EXPECT_EQ(b.Id(), 1);
+    // NOLINTNEXTLINE(bugprone-use-after-move) -- intentionnel : on verifie l'etat moved-from
     EXPECT_EQ(a.Id(), -1);
 }
 
