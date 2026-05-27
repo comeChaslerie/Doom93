@@ -6,7 +6,6 @@
 !.gitmodules
 !.clang-format
 !.clang-tidy
-!.github/*
 !*.md
 !*.py
 !*.yml
