@@ -8,7 +8,6 @@ void game::system::CooldownSystem(Engine::Core &core)
     float deltaTime = time._elapsedTime;
     auto &registery = core.GetRegistry();
 
-    registery.view<component::Cooldown>().each([&deltaTime](component::Cooldown &cooldown) {
-        cooldown.Tick(deltaTime);
-    });
+    registery.view<component::Cooldown>().each(
+        [&deltaTime](component::Cooldown &cooldown) { cooldown.Tick(deltaTime); });
 }
