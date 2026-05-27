@@ -4,7 +4,7 @@
 
 namespace game::component {
 class Seconds {
-public:
+  public:
     constexpr explicit Seconds(float value = 0.f) : _value(value) {};
     [[nodiscard]] constexpr float Value() const { return _value; };
     [[nodiscard]] friend constexpr Seconds operator+(Seconds leftMember, Seconds rightMember)
@@ -16,7 +16,8 @@ public:
         return Seconds{leftMember._value - rightMember._value};
     }
     [[nodiscard]] constexpr std::partial_ordering operator<=>(const Seconds &) const = default;
-private:
+
+  private:
     float _value;
 };
-}
+} // namespace game::component

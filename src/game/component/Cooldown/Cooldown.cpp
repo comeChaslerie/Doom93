@@ -4,10 +4,7 @@
 
 using namespace game::component;
 
-bool Cooldown::Ready() const
-{
-    return (_remaining <= Seconds{0.f});
-}
+bool Cooldown::Ready() const { return (_remaining <= Seconds{0.f}); }
 
 void Cooldown::Tick(float dt)
 {
@@ -15,17 +12,8 @@ void Cooldown::Tick(float dt)
         _remaining = Seconds{std::max(_remaining.Value() - dt, 0.f)};
 }
 
-void Cooldown::Trigger()
-{
-    _remaining = _duration;
-}
+void Cooldown::Trigger() { _remaining = _duration; }
 
-Seconds Cooldown::Duration() const
-{
-    return _duration;
-}
+Seconds Cooldown::Duration() const { return _duration; }
 
-Seconds Cooldown::Remaining() const
-{
-    return _remaining;
-}
+Seconds Cooldown::Remaining() const { return _remaining; }
