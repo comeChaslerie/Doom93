@@ -4,6 +4,6 @@
 
 namespace game::component {
 struct Health {
-    Stat hp{100.f};
+    Stat<float> hp{100.f};
 };
 } // namespace game::component

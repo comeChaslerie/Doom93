@@ -4,6 +4,6 @@
 
 namespace game::component {
 struct Armor {
-    Stat armor{0.f};
+    Stat<float> armor{0.f};
 };
 } // namespace game::component
