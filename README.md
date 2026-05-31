@@ -1,116 +1,110 @@
 # Doom93
 
-> Recode du **Doom** original de id Software (1993), construit sur le moteur
-> **[Engine²](https://github.com/EngineSquared/EngineSquared)** (Engine Squared).
+[![CI](https://github.com/comeChaslerie/Doom93/actions/workflows/ci.yml/badge.svg)](https://github.com/comeChaslerie/Doom93/actions/workflows/ci.yml)
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
+[![Build system: xmake](https://img.shields.io/badge/build-xmake-brightgreen.svg)](https://xmake.io/)
 
-Doom93 est un projet d'apprentissage du C++ moderne (C++20) et du paradigme
-**ECS** (Entity Component System). Le gameplay est reconstruit brique par brique
-au-dessus d'Engine², qui fournit le `Core`, le registre d'entités (basé sur
-[EnTT](https://github.com/skypjack/entt)) et l'ordonnanceur de systèmes.
+> A recode of id Software's original **Doom** (1993), built on top of the
+> **[Engine²](https://github.com/EngineSquared/EngineSquared)** (Engine Squared) engine.
 
-<<<<<<< Updated upstream
-'xmake'
-=======
-## Sommaire
->>>>>>> Stashed changes
+Doom93 is a learning project focused on modern C++ (C++20) and the **ECS**
+(Entity Component System) paradigm. The gameplay is rebuilt piece by piece on top
+of Engine², which provides the `Core`, the entity registry (powered by
+[EnTT](https://github.com/skypjack/entt)) and the system scheduler.
 
-- [Prérequis](#prérequis)
+## Table of contents
+
+- [Requirements](#requirements)
 - [Installation](#installation)
-- [Compilation & exécution](#compilation--exécution)
-- [Tests & qualité](#tests--qualité)
+- [Build & run](#build--run)
+- [Testing & quality](#testing--quality)
 - [Architecture](#architecture)
-- [Structure du dépôt](#structure-du-dépôt)
+- [Repository layout](#repository-layout)
 - [Assets](#assets)
 
-<<<<<<< Updated upstream
-'xmake Doom93'
-=======
-## Prérequis
+## Requirements
 
-- [xmake](https://xmake.io/) (gestion du build et des dépendances)
-- Un compilateur **C++20** (Clang ou GCC récent)
-- **clang-format** et **clang-tidy** (≥ 22) pour la vérification du style et du linting
-- Sur Linux : `libglu1-mesa-dev freeglut3-dev mesa-common-dev mesa-utils`
+- [xmake](https://xmake.io/) (build system and dependency management)
+- A **C++20** compiler (recent Clang or GCC)
+- **clang-format** and **clang-tidy** (≥ 22) for style checking and linting
+- On Linux: `libglu1-mesa-dev freeglut3-dev mesa-common-dev mesa-utils`
 
-Les dépendances C++ (`entt`, `glm`, `spdlog`, `fmt`, `tinyobjloader`, `gtest`)
-sont récupérées automatiquement par xmake.
+C++ dependencies (`entt`, `glm`, `spdlog`, `fmt`, `tinyobjloader`, `gtest`) are
+fetched automatically by xmake.
 
 ## Installation
 
-Le moteur Engine² est inclus en sous-module Git. Clonez le dépôt avec ses
-sous-modules :
+The Engine² engine is included as a Git submodule. Clone the repository together
+with its submodules:
 
 ```sh
-git clone --recurse-submodules https://github.com/comeChaslerie/Doom93.git
+git clone --recurse-submodules git@github.com:comeChaslerie/Doom93.git
 cd Doom93
 ```
 
-Si le dépôt est déjà cloné sans les sous-modules :
+If the repository was already cloned without its submodules:
 
 ```sh
 git submodule update --init --recursive
 ```
 
-## Compilation & exécution
+## Build & run
 
 ```sh
-xmake            # configure et compile le projet
-xmake run Doom93 # lance le jeu
+xmake            # configure and build the project
+xmake run Doom93 # launch the game
 ```
 
-## Tests & qualité
+## Testing & quality
 
-Le projet est testé via **GoogleTest**, chaque source de `src/` ayant sa cible
-de test miroir dans `tests/`.
+The project is tested with **GoogleTest**: every source file in `src/` has a
+mirrored test target in `tests/`.
 
 ```sh
-xmake test                  # exécute toute la suite de tests
-xmake format -c             # vérifie le formatage (clang-format)
-xmake check clang.tidy      # analyse statique (clang-tidy)
-xmake check_leaks           # détection de fuites mémoire (macOS)
+xmake test                  # run the full test suite
+xmake format -c             # check formatting (clang-format)
+xmake check clang.tidy      # static analysis (clang-tidy)
+xmake check_leaks           # memory leak detection (macOS)
 ```
 
-La CI GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
-applique sur Linux et macOS : vérification de propreté du dépôt, `clang-format`,
-`clang-tidy`, build multi-plateforme, tests, couverture (gcovr) et détection de
-fuites mémoire.
+The GitHub Actions CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
+runs on both Linux and macOS: repository cleanliness check, `clang-format`,
+`clang-tidy`, multi-platform build, tests, coverage (gcovr) and memory leak
+detection.
 
 ## Architecture
 
-Le code suit une organisation **ECS** stricte :
+The code follows a strict **ECS** organization:
 
-- **Components** (`src/game/component/`) — données pures attachées aux entités :
+- **Components** (`src/game/component/`) — pure data attached to entities:
   `Health`, `Armor`, `Stat`, `Ammo`, `Damage`, `TextureHandle`…
-- **Systems** (`src/game/system/`) — logique sans état opérant sur les
-  composants : `ComputeDamage`, `ApplyDamage`, `AmmoInventory`.
+- **Systems** (`src/game/system/`) — stateless logic operating on components:
+  `ComputeDamage`, `ApplyDamage`, `AmmoInventory`.
 
-Les systèmes sont enregistrés sur l'ordonnanceur d'Engine²
-(`Startup`, `Update`) depuis [`src/main.cpp`](src/main.cpp).
+Systems are registered on Engine²'s scheduler (`Startup`, `Update`) from
+[`src/main.cpp`](src/main.cpp).
 
-## Structure du dépôt
+## Repository layout
 
 ```
 .
 ├── src/
-│   ├── main.cpp              # point d'entrée : setup du Core et des systèmes
+│   ├── main.cpp              # entry point: Core and systems setup
 │   └── game/
-│       ├── component/        # composants ECS (données)
-│       └── system/           # systèmes ECS (logique)
-├── tests/                    # tests GoogleTest (miroir de src/)
-├── assets/                   # ressources du jeu (voir ci-dessous)
-├── EngineSquared/            # sous-module : le moteur Engine²
-├── xmake.lua                 # définition du build et des cibles de test
-└── .github/workflows/        # pipelines CI
+│       ├── component/        # ECS components (data)
+│       └── system/           # ECS systems (logic)
+├── tests/                    # GoogleTest suites (mirror of src/)
+├── assets/                   # game resources (see below)
+├── EngineSquared/            # submodule: the Engine² engine
+├── xmake.lua                 # build definition and test targets
+└── .github/workflows/        # CI pipelines
 ```
 
 ## Assets
 
-Les ressources sont organisées par catégorie dans `assets/` :
+Resources are organized by category under `assets/`:
 `audio/`, `engine/`, `entities/`, `environment/`, `levels/`, `ui/`.
 
-Elles proviennent du projet libre **[Freedoom](https://freedoom.github.io/)** —
-voir [`assets/FREEDOOM-CREDITS.txt`](assets/FREEDOOM-CREDITS.txt) et
+They come from the free **[Freedoom](https://freedoom.github.io/)** project — see
+[`assets/FREEDOOM-CREDITS.txt`](assets/FREEDOOM-CREDITS.txt) and
 [`assets/FREEDOOM-COPYING.txt`](assets/FREEDOOM-COPYING.txt).
-</content>
-</invoke>
->>>>>>> Stashed changes
