@@ -5,26 +5,26 @@ using game::component::Stat;
 
 TEST(Stat, Construction)
 {
-    Stat s(100.f);
+    Stat<int> s(100);
 
-    EXPECT_FLOAT_EQ(s.Current(), 100.f);
-    EXPECT_FLOAT_EQ(s.Max(), 100.f);
-    EXPECT_FLOAT_EQ(s.Ratio(), 1.f);
+    EXPECT_FLOAT_EQ(s.Current(), 100);
+    EXPECT_FLOAT_EQ(s.Max(), 100);
+    EXPECT_FLOAT_EQ(s.Ratio(), 1);
     EXPECT_FALSE(s.IsEmpty());
 }
 
 TEST(Stat, DamageClampsAtZero)
 {
-    Stat s(100.f);
+    Stat<int> s(100);
 
-    s.Damage(150.f); // plus que le max
-    EXPECT_FLOAT_EQ(s.Current(), 0.f);
+    s.Damage(150); // plus que le max
+    EXPECT_FLOAT_EQ(s.Current(), 0);
     EXPECT_TRUE(s.IsEmpty());
 }
 
 TEST(Stat, HealCapsAtMax)
 {
-    Stat s(100.f);
+    Stat<float> s(100.f);
 
     s.Damage(40.f); // current = 60
     s.Heal(1000.f); // plafonne au max, pas 1060
@@ -33,7 +33,7 @@ TEST(Stat, HealCapsAtMax)
 
 TEST(Stat, NegativeHealNeverBelowZero)
 {
-    Stat s(100.f);
+    Stat<float> s(100.f);
 
     s.Damage(80.f); // current = 20
     s.Heal(-50.f);  // 20 - 50 = -30 -> clampe a 0
@@ -43,7 +43,7 @@ TEST(Stat, NegativeHealNeverBelowZero)
 
 TEST(Stat, SetMaxLowersAndReclamps)
 {
-    Stat s(100.f);
+    Stat<float> s(100.f);
 
     s.SetMax(50.f); // baisse le max sous current, sans refill
     EXPECT_FLOAT_EQ(s.Max(), 50.f);
@@ -52,7 +52,7 @@ TEST(Stat, SetMaxLowersAndReclamps)
 
 TEST(Stat, SetMaxWithRefill)
 {
-    Stat s(100.f);
+    Stat<float> s(100.f);
 
     s.Damage(100.f);       // current = 0
     s.SetMax(200.f, true); // refill -> current = max = 200
@@ -62,7 +62,7 @@ TEST(Stat, SetMaxWithRefill)
 
 TEST(Stat, NegativeMaxIsClampedNoNaN)
 {
-    Stat s(-10.f); // max negatif -> borne a 0
+    Stat<float> s(-10.f); // max negatif -> borne a 0
 
     EXPECT_FLOAT_EQ(s.Max(), 0.f);
     EXPECT_FLOAT_EQ(s.Current(), 0.f);
@@ -72,8 +72,25 @@ TEST(Stat, NegativeMaxIsClampedNoNaN)
 
 TEST(Stat, RatioHalf)
 {
-    Stat s(100.f);
+    Stat<int> s(100);
 
-    s.Damage(50.f);
+    s.Damage(50);
     EXPECT_FLOAT_EQ(s.Ratio(), 0.5f);
+}
+
+TEST(Stat, IntHealCapsAtMax)
+{
+    Stat<int> s(100);
+
+    s.Damage(40); // current = 60
+    s.Heal(1000); // plafonne au max, pas 1060
+    EXPECT_EQ(s.Current(), 100);
+}
+
+TEST(Stat, DoubleRatioKeepsPrecision)
+{
+    Stat<double> s(3.0);
+
+    s.Damage(2.0);                          // current = 1.0
+    EXPECT_DOUBLE_EQ(s.Ratio(), 1.0 / 3.0); // Ratio() renvoie double -> aucune troncature float
 }
