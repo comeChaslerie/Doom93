@@ -4,8 +4,8 @@ Doom93 is a recode of the famous Doom game Released on 1993 by id Software.
 
 # Build
 
-xmake
+'xmake'
 
 # Run
 
-xmake Doom93
+'xmake Doom93'
