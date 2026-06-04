@@ -12,6 +12,7 @@
 !*.cpp
 !*.hpp
 !*.lua
+!*.wad
 
 !assets/**
 
