@@ -155,7 +155,9 @@ struct Picture {
 
 // Flat (sol/plafond) : 64x64 indices palette, sans en-tete.
 struct Flat {
-    std::array<std::uint8_t, 64 * 64> pixels{};
+    static constexpr std::size_t WIDTH = 64;
+    static constexpr std::size_t HEIGHT = 64;
+    std::array<std::uint8_t, WIDTH * HEIGHT> pixels{};
 };
 
 // ============================================================================
