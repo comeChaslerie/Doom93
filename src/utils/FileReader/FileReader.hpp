@@ -21,6 +21,7 @@ class FileReader {
     void Seek(std::streamoff pos);
     [[nodiscard]] int32_t GetInt32();
     [[nodiscard]] int16_t GetInt16();
+    [[nodiscard]] uint8_t GetUint8();
     [[nodiscard]] std::string GetString(size_t size);
     static constexpr size_t _int32Size = 4;
     static constexpr size_t _int16Size = 2;

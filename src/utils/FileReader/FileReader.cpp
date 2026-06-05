@@ -36,4 +36,12 @@ int16_t utils::FileReader::FileReader::GetInt16()
     return int_value;
 }
 
+uint8_t utils::FileReader::FileReader::GetUint8()
+{
+    uint8_t value = 0;
+
+    _file.read(reinterpret_cast<char *>(&value), 1);
+    return value;
+}
+
 void utils::FileReader::FileReader::Seek(std::streamoff pos) { _file.seekg(pos); }
