@@ -1,8 +1,8 @@
 #include "game/loader/WADReader.hpp"
 #include "utils/FileReader/FileReader.hpp"
+#include <cctype>
 #include <cstddef>
 #include <cstdint>
-#include <cstdlib>
 
 void game::loader::WADReader::GetHeader()
 {
@@ -49,4 +49,4 @@ void game::loader::WADReader::GetLumpsData()
     }
 }
 
-game::loader::WadInfo game::loader::WADReader::GetWadInfos() const { return _wadInfos; }
+game::loader::LumpData game::loader::WADReader::GetLumpData() const { return _lumpData; }
