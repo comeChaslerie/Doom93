@@ -88,6 +88,12 @@ jobs:
           sudo ./llvm.sh 22
           sudo apt install -y clang-tidy
 
+      - name: Setup Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev mesa-utils
+          sudo apt-get install -y libxrender-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libxrandr-dev
+
       - name: Install xmake
         uses: xmake-io/github-action-setup-xmake@fadadea1162ec75ce1541d5bb68226fb147c221e
         with:
@@ -121,6 +127,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev mesa-utils
+          sudo apt-get install -y libxrender-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libxrandr-dev
 
       - name: Install xmake
         uses: xmake-io/github-action-setup-xmake@fadadea1162ec75ce1541d5bb68226fb147c221e
@@ -158,6 +165,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev mesa-utils
+          sudo apt-get install -y libxrender-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libxrandr-dev
           sudo apt-get install -y python3 python3-pip
           pip3 install gcovr
 
