@@ -1,6 +1,6 @@
+#include "utils/FileReader/FileReader.hpp"
 #include <cstddef>
 #include <fstream>
-#include "utils/FileReader/FileReader.hpp"
 
 void utils::FileReader::checkFileIntegrity(std::ifstream &file, size_t nbBytes, bool checkEnd)
 {
