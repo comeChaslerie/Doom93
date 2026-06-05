@@ -2,6 +2,7 @@
 
 #include "utils/FileReader/FileReader.hpp"
 #include <cstdint>
+#include <vector>
 
 namespace game::loader {
 class WadLoadError : public std::runtime_error {
