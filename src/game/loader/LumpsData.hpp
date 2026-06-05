@@ -142,6 +142,7 @@ struct TextureDef {
 
 // Format "picture" : sprites, patches muraux, menu, status bar... tous identiques.
 struct Picture {
+    std::string name; // nom du lump (ex. "TROOA1", "WALL03_1")
     std::int32_t width = 0;
     std::int32_t height = 0;
     glm::ivec2 offset{0, 0};         // point d'ancrage (leftOffset, topOffset)
@@ -150,6 +151,7 @@ struct Picture {
 
 // Flat (sol/plafond) : 64x64 pixels RGBA.
 struct Flat {
+    std::string name; // nom du lump (ex. "FLOOR5_1")
     static constexpr std::size_t WIDTH = 64;
     static constexpr std::size_t HEIGHT = 64;
     std::array<glm::u8vec4, WIDTH * HEIGHT> pixels{};
@@ -187,6 +189,21 @@ struct Level {
     std::vector<Sector> sectors;
     Reject reject;
     Blockmap blockmap;
+};
+
+// ============================================================================
+// Agregat de tous les assets WAD parses, retourne par WadLoader.
+// WadInfo reste interne au loader (metadonnees + annuaire brut).
+// ============================================================================
+
+struct LumpData {
+    std::vector<Level> levels;        // niveaux (E?M? / MAP??)
+    std::vector<Palette> palettes;    // PLAYPAL  (14 palettes en general)
+    std::vector<Colormap> colormaps;  // COLORMAP (34 tables en general)
+    Pnames pnames;                    // PNAMES : noms des patches references
+    std::vector<TextureDef> textures; // TEXTURE1 / TEXTURE2
+    std::vector<Flat> flats;          // F_START ... F_END
+    std::vector<Picture> pictures;    // S_START / P_START ... sprites + patches
 };
 
 } // namespace game::loader
