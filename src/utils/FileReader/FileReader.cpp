@@ -45,3 +45,5 @@ uint8_t utils::FileReader::FileReader::GetUint8()
 }
 
 void utils::FileReader::FileReader::Seek(std::streamoff pos) { _file.seekg(pos); }
+
+void utils::FileReader::FileReader::Skip(std::streamoff nbBytes) { _file.seekg(nbBytes, std::ios::cur); }

@@ -19,6 +19,7 @@ class FileReader {
     explicit FileReader(const std::string &filepath) : _file(filepath, std::ios::binary) {}
     void CheckFileIntegrity(size_t nbBytes, CheckState checkState);
     void Seek(std::streamoff pos);
+    void Skip(std::streamoff nbBytes);
     [[nodiscard]] int32_t GetInt32();
     [[nodiscard]] int16_t GetInt16();
     [[nodiscard]] uint8_t GetUint8();
