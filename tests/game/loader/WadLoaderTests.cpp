@@ -1,6 +1,7 @@
 #include "game/loader/LumpsData.hpp"
 #include "game/loader/WadLoader.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <filesystem>
 #include <gtest/gtest.h>
 

@@ -1,5 +1,6 @@
 #include "utils/FileReader/FileReader.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <ios>
 #include <vector>
