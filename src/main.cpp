@@ -41,7 +41,7 @@ int main()
     Engine::Core core;
     int deaths = 0;
 
-    LoadWad("freedoom1.wad");
+    LoadWad("freedoom/freedoom1.wad");
 
     core.RegisterSystem<Engine::Scheduler::Startup>([](Engine::Core &core) {
         auto entity = core.CreateEntity();
