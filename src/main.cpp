@@ -12,13 +12,36 @@
 #include "scheduler/Startup.hpp"
 #include "scheduler/Update.hpp"
 #include "game/plugin/Combat/CombatPlugin.hpp"
+#include "game/loader/WadLoader.hpp"
+
+#include <exception>
 
 using namespace game::component;
+
+namespace {
+void LoadWad(const std::string &path)
+{
+    try
+    {
+        const game::loader::LumpData wad = game::loader::WadLoader(path);
+        Log::Info(fmt::format("WAD '{}' charge : {} niveaux, {} palettes, {} colormaps, {} pnames, {} textures, {} "
+                              "flats, {} sprites/patches",
+                              path, wad.levels.size(), wad.palettes.size(), wad.colormaps.size(), wad.pnames.size(),
+                              wad.textures.size(), wad.flats.size(), wad.pictures.size()));
+    }
+    catch (const std::exception &error)
+    {
+        Log::Error(fmt::format("Echec du chargement de '{}' : {}", path, error.what()));
+    }
+}
+} // namespace
 
 int main()
 {
     Engine::Core core;
     int deaths = 0;
+
+    LoadWad("freedoom1.wad");
 
     core.RegisterSystem<Engine::Scheduler::Startup>([](Engine::Core &core) {
         auto entity = core.CreateEntity();
