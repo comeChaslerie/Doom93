@@ -1,13 +1,34 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+#include <fstream>
 #include <stdexcept>
+#include <string>
 
 namespace utils::FileReader {
 class FileReaderError : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
-void checkFileIntegrity(std::ifstream &file, size_t nbBytes, bool checkEnd);
-[[ nodiscard ]] int32_t GetInt32(std::ifstream &file);
-[[ nodiscard ]] std::string GetString(std::ifstream &file, size_t size);
-constexpr size_t int32Size = 4;
-}
+class FileReader {
+  public:
+    enum class CheckState {
+        BytesOnly,
+        StreamOnly,
+        BytesAndStream
+    };
+    explicit FileReader(const std::string &filepath) : _file(filepath, std::ios::binary) {}
+    void CheckFileIntegrity(size_t nbBytes, CheckState checkState);
+    void Seek(std::streamoff pos);
+    void Skip(std::streamoff nbBytes);
+    [[nodiscard]] int32_t GetInt32();
+    [[nodiscard]] int16_t GetInt16();
+    [[nodiscard]] uint8_t GetUint8();
+    [[nodiscard]] std::string GetString(size_t size);
+    static constexpr size_t _int32Size = 4;
+    static constexpr size_t _int16Size = 2;
+
+  private:
+    std::ifstream _file;
+};
+} // namespace utils::FileReader
