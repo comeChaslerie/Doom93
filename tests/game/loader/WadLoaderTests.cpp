@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <filesystem>
 #include <gtest/gtest.h>
-#include <optional>
 
 using game::loader::Level;
 using game::loader::LumpData;
@@ -20,29 +19,31 @@ constexpr std::size_t EXPECTED_LEVELS = 36;    // 4 episodes x 9 maps
 // (environnement sans la fixture), les tests sont skippes au lieu d'echouer.
 class WadLoaderTest : public ::testing::Test {
   protected:
-    static std::optional<LumpData> _wad;
+    static LumpData _wad;
+    static bool _loaded;
 
     static void SetUpTestSuite()
     {
         if (std::filesystem::exists(WAD_PATH))
+        {
             _wad = game::loader::WadLoader(WAD_PATH);
+            _loaded = true;
+        }
     }
 
-    static const LumpData &Wad() { return *_wad; }
+    static const LumpData &Wad() { return _wad; }
 
     void SetUp() override
     {
-        if (!_wad.has_value())
+        if (!_loaded)
             GTEST_SKIP() << "freedoom1.wad introuvable (cwd=" << std::filesystem::current_path().string() << ")";
     }
 };
-std::optional<LumpData> WadLoaderTest::_wad;
+LumpData WadLoaderTest::_wad;
+bool WadLoaderTest::_loaded = false;
 } // namespace
 
-TEST_F(WadLoaderTest, ParsesAllPalettes)
-{
-    EXPECT_EQ(Wad().palettes.size(), EXPECTED_PALETTES);
-}
+TEST_F(WadLoaderTest, ParsesAllPalettes) { EXPECT_EQ(Wad().palettes.size(), EXPECTED_PALETTES); }
 
 TEST_F(WadLoaderTest, PalettesAreOpaque)
 {
@@ -51,15 +52,9 @@ TEST_F(WadLoaderTest, PalettesAreOpaque)
             EXPECT_EQ(color.a, 255); // alpha force a 255 au parsing
 }
 
-TEST_F(WadLoaderTest, ParsesAllColormaps)
-{
-    EXPECT_EQ(Wad().colormaps.size(), EXPECTED_COLORMAPS);
-}
+TEST_F(WadLoaderTest, ParsesAllColormaps) { EXPECT_EQ(Wad().colormaps.size(), EXPECTED_COLORMAPS); }
 
-TEST_F(WadLoaderTest, ParsesAllLevels)
-{
-    EXPECT_EQ(Wad().levels.size(), EXPECTED_LEVELS);
-}
+TEST_F(WadLoaderTest, ParsesAllLevels) { EXPECT_EQ(Wad().levels.size(), EXPECTED_LEVELS); }
 
 TEST_F(WadLoaderTest, ParsesGlobalGraphics)
 {
