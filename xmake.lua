@@ -39,9 +39,60 @@ target("WadLoaderTests")
     set_rundir("$(projectdir)")
 target_end()
 
+-- Integration tests for ECS systems: they instantiate an Engine::Core, so they
+-- need the EngineSquared dependency and several translation units. Declared
+-- manually for the same reason as WadLoaderTests above.
+local function engine_test(name, srcs)
+    target(name)
+        set_kind("binary")
+        set_group("test")
+        set_default(false)
+        set_languages("c++20")
+        add_deps("EngineSquared")
+        add_packages("gtest", "entt", "glm", "spdlog", "fmt")
+        add_links("gtest")
+        add_tests("default")
+        add_includedirs("src/")
+        add_files("tests/main.cpp")
+        for _, src in ipairs(srcs) do
+            add_files(src)
+        end
+        set_rundir("$(projectdir)")
+    target_end()
+end
+
+engine_test("ApplyDamageTests", {
+    "tests/game/system/ApplyDamage/ApplyDamageTests.cpp",
+    "src/game/system/ApplyDamage/ApplyDamage.cpp",
+    "src/game/system/ComputeDamage/ComputeDamage.cpp",
+})
+engine_test("DeathSystemTests", {
+    "tests/game/system/DeathSystem/DeathSystemTests.cpp",
+    "src/game/system/DeathSystem/DeathSystem.cpp",
+})
+engine_test("DeathCleanupTests", {
+    "tests/game/system/DeathSystem/DeathCleanupTests.cpp",
+    "src/game/system/DeathSystem/DeathCleanup.cpp",
+})
+engine_test("HealthPipelineTests", {
+    "tests/game/system/DeathSystem/HealthPipelineTests.cpp",
+    "src/game/system/ApplyDamage/ApplyDamage.cpp",
+    "src/game/system/ComputeDamage/ComputeDamage.cpp",
+    "src/game/system/DeathSystem/DeathSystem.cpp",
+    "src/game/system/DeathSystem/DeathCleanup.cpp",
+})
+
+local manual_tests = {
+    WadLoaderTests = true,
+    ApplyDamageTests = true,
+    DeathSystemTests = true,
+    DeathCleanupTests = true,
+    HealthPipelineTests = true,
+}
+
 for _, file in ipairs(os.files("tests/**.cpp")) do
     local name = path.basename(file)
-    if name ~= "main" and name ~= "WadLoaderTests" then
+    if name ~= "main" and not manual_tests[name] then
         target(name)
         set_kind("binary")
         set_group("test")
