@@ -1,17 +1,16 @@
 #include "Logger.hpp"
+#include "component/Camera.hpp"
+#include "component/Transform.hpp"
 #include "core/Core.hpp"
 #include "entity/Entity.hpp"
 #include "fmt/format.h"
-#include "game/component/Damage/DamageEvent.hpp"
-#include "game/component/Damage/DamageType.hpp"
-#include "game/component/Death/DeathEvent.hpp"
 #include "game/component/Health.hpp"
 #include "game/loader/WadLoader.hpp"
-#include "game/plugin/Health/HealthPlugin.hpp"
-#include "resource/EventManager.hpp"
+#include "glm/fwd.hpp"
+#include "glm/trigonometric.hpp"
+#include "plugin/PluginDefaultPipeline.hpp"
+#include "plugin/PluginWindow.hpp"
 #include "scheduler/Startup.hpp"
-#include "scheduler/Update.hpp"
-
 #include <exception>
 
 using namespace game::component;
@@ -33,20 +32,17 @@ void LoadWad(const std::string &path)
 int main()
 {
     Engine::Core core;
-    int deaths = 0;
 
     LoadWad("freedoom1.wad");
 
     core.RegisterSystem<Engine::Scheduler::Startup>([](Engine::Core &core) {
-        auto entity = core.CreateEntity();
-        entity.AddComponent<Health>();
-        entity.AddComponent<DamageEvent>(150.f, DamageType::Hitscan);
+        auto player = core.CreateEntity();
+        player.AddComponent<game::component::Health>();
+        player.AddComponent<Object::Component::Transform>(glm::vec3(0.75f, 1.0f, -2.5f), glm::vec3(1.0f),
+                                                          glm::quat(glm::vec3(glm::radians(20.0f), 0.f, 0.f)));
+        player.AddComponent<Object::Component::Camera>();
     });
-    core.AddPlugins<game::plugin::HealthPlugin>();
-    auto &events = core.GetResource<Event::Resource::EventManager>();
-    events.RegisterCallback<DeathEvent>([&deaths](const DeathEvent &e) { ++deaths; });
-    core.RegisterSystem<Engine::Scheduler::Update>([](Engine::Core &core) { core.Stop(); });
+    core.AddPlugins<Window::Plugin, DefaultPipeline::Plugin>();
     core.Run();
-    Log::Info(fmt::format("Total deaths counted: {}", deaths));
     return 0;
 }
