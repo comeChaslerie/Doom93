@@ -43,10 +43,9 @@ int main()
         entity.AddComponent<DamageEvent>(150.f, DamageType::Hitscan);
     });
     core.AddPlugins<game::plugin::HealthPlugin>();
-    auto &events = core.GetResource<Event::Resource::EventManager>();events.RegisterCallback<DeathEvent>([&deaths](const DeathEvent &e) { ++deaths; });
-    core.RegisterSystem<Engine::Scheduler::Update>([](Engine::Core &core) {
-        core.Stop();
-    });
+    auto &events = core.GetResource<Event::Resource::EventManager>();
+    events.RegisterCallback<DeathEvent>([&deaths](const DeathEvent &e) { ++deaths; });
+    core.RegisterSystem<Engine::Scheduler::Update>([](Engine::Core &core) { core.Stop(); });
     core.Run();
     Log::Info(fmt::format("Total deaths counted: {}", deaths));
     return 0;
