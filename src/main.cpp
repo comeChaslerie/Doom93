@@ -16,11 +16,11 @@
 using namespace game::component;
 
 namespace {
-void LoadWad(const std::string &path)
+void LoadWad(Engine::Core &core, const std::string &path)
 {
     try
     {
-        const game::loader::LumpData wad = game::loader::WadLoader(path);
+        core.RegisterResource(game::loader::WadLoader(path));
     }
     catch (const std::exception &error)
     {
@@ -33,7 +33,7 @@ int main()
 {
     Engine::Core core;
 
-    LoadWad("freedoom1.wad");
+    LoadWad(core, "freedoom1.wad");
 
     core.RegisterSystem<Engine::Scheduler::Startup>([](Engine::Core &core) {
         auto player = core.CreateEntity();
