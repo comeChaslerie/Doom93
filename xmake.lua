@@ -10,7 +10,8 @@ target("Doom93")
     add_deps("EngineSquared")
     add_files("src/**.cpp")
     add_includedirs("src/")
-    add_packages("entt", "glm", "spdlog", "fmt", "tinyobjloader")
+    add_packages("entt", "glm", "glfw", "spdlog", "fmt", "stb", "tinyobjloader", "wgpu-native", "glfw3webgpu",
+        "lodepng")
     set_rundir("$(projectdir)")
     if is_plat("macosx") then
         add_ldflags("-ObjC")
