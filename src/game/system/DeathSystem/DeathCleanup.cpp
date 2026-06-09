@@ -1,7 +1,7 @@
 #include "game/system/DeathSystem/DeathCleanup.hpp"
 #include "core/Core.hpp"
 #include "entity/EntityId.hpp"
-#include "game/component/Death/Dead.hpp"
+#include "game/component/Tags/Dead.hpp"
 #include <vector>
 
 namespace game::system {
@@ -15,7 +15,7 @@ void DeathCleanup(Engine::Core &core)
     }
     for (Engine::EntityId entity : entities)
     {
-        core.GetRegistry().destroy(entity);
+        core.KillEntity(entity);
     }
 }
 } // namespace game::system
