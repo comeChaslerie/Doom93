@@ -82,9 +82,14 @@ engine_test("HealthPipelineTests", {
     "src/game/system/DeathSystem/DeathSystem.cpp",
     "src/game/system/DeathSystem/DeathCleanup.cpp",
 })
-engine_test("MovementSystemTests", {
-    "tests/game/system/Movement/MovementSystemTests.cpp",
-    "src/game/system/Movement/MovementSystem.cpp",
+engine_test("ApplyMovementTests", {
+    "tests/game/system/Movement/ApplyMovementTests.cpp",
+    "src/game/system/Movement/ApplyMovement.cpp",
+})
+engine_test("ComputeMovementVelocityTests", {
+    "tests/game/system/Movement/ComputeMovementVelocityTests.cpp",
+    "src/game/system/Movement/ComputeMovementVelocity.cpp",
+    "src/game/system/Movement/ComputeVelocity.cpp",
 })
 
 local manual_tests = {
@@ -93,7 +98,8 @@ local manual_tests = {
     DeathSystemTests = true,
     DeathCleanupTests = true,
     HealthPipelineTests = true,
-    MovementSystemTests = true,
+    ApplyMovementTests = true,
+    ComputeMovementVelocityTests = true,
 }
 
 for _, file in ipairs(os.files("tests/**.cpp")) do
