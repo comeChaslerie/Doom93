@@ -3,5 +3,5 @@
 #include "core/Core.hpp"
 
 namespace game::system {
-void MovementSystem(Engine::Core &core);
+void ApplyMovement(Engine::Core &core);
 }

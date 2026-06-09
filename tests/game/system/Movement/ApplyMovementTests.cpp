@@ -2,13 +2,13 @@
 #include "core/Core.hpp"
 #include "entity/Entity.hpp"
 #include "game/component/Velocity/Velocity.hpp"
-#include "game/system/Movement/MovementSystem.hpp"
+#include "game/system/Movement/ApplyMovement.hpp"
 #include "resource/Time.hpp"
 #include <glm/vec3.hpp>
 #include <gtest/gtest.h>
 
 using game::component::Velocity;
-using game::system::MovementSystem;
+using game::system::ApplyMovement;
 using Object::Component::Transform;
 
 namespace {
@@ -25,7 +25,7 @@ const glm::vec3 &PositionOf(Engine::Core &core, Engine::EntityId id)
 }
 } // namespace
 
-TEST(MovementSystem, AdvancesPositionByVelocityTimesDelta)
+TEST(ApplyMovement, AdvancesPositionByVelocityTimesDelta)
 {
     Engine::Core core;
     SetDeltaTime(core, 0.5f);
@@ -34,7 +34,7 @@ TEST(MovementSystem, AdvancesPositionByVelocityTimesDelta)
     entity.AddComponent<Transform>(glm::vec3(0.f));
     entity.AddComponent<Velocity>(glm::vec3(2.f, 0.f, 0.f));
 
-    MovementSystem(core);
+    ApplyMovement(core);
 
     const glm::vec3 &pos = PositionOf(core, entity.Id()); // 2 * 0.5 = 1
     EXPECT_FLOAT_EQ(pos.x, 1.f);
@@ -42,7 +42,7 @@ TEST(MovementSystem, AdvancesPositionByVelocityTimesDelta)
     EXPECT_FLOAT_EQ(pos.z, 0.f);
 }
 
-TEST(MovementSystem, MovesOnAllThreeAxes)
+TEST(ApplyMovement, MovesOnAllThreeAxes)
 {
     Engine::Core core;
     SetDeltaTime(core, 1.f);
@@ -51,7 +51,7 @@ TEST(MovementSystem, MovesOnAllThreeAxes)
     entity.AddComponent<Transform>(glm::vec3(10.f, 20.f, 30.f));
     entity.AddComponent<Velocity>(glm::vec3(1.f, -2.f, 3.f));
 
-    MovementSystem(core);
+    ApplyMovement(core);
 
     const glm::vec3 &pos = PositionOf(core, entity.Id());
     EXPECT_FLOAT_EQ(pos.x, 11.f);
@@ -59,7 +59,7 @@ TEST(MovementSystem, MovesOnAllThreeAxes)
     EXPECT_FLOAT_EQ(pos.z, 33.f);
 }
 
-TEST(MovementSystem, ZeroDeltaKeepsPositionStill)
+TEST(ApplyMovement, ZeroDeltaKeepsPositionStill)
 {
     Engine::Core core;
     SetDeltaTime(core, 0.f);
@@ -68,7 +68,7 @@ TEST(MovementSystem, ZeroDeltaKeepsPositionStill)
     entity.AddComponent<Transform>(glm::vec3(5.f, 5.f, 5.f));
     entity.AddComponent<Velocity>(glm::vec3(100.f, 100.f, 100.f));
 
-    MovementSystem(core);
+    ApplyMovement(core);
 
     const glm::vec3 &pos = PositionOf(core, entity.Id());
     EXPECT_FLOAT_EQ(pos.x, 5.f);
@@ -76,7 +76,7 @@ TEST(MovementSystem, ZeroDeltaKeepsPositionStill)
     EXPECT_FLOAT_EQ(pos.z, 5.f);
 }
 
-TEST(MovementSystem, EntityWithoutVelocityStaysStill)
+TEST(ApplyMovement, EntityWithoutVelocityStaysStill)
 {
     Engine::Core core;
     SetDeltaTime(core, 1.f);
@@ -85,7 +85,7 @@ TEST(MovementSystem, EntityWithoutVelocityStaysStill)
     auto camera = core.CreateEntity();
     camera.AddComponent<Transform>(glm::vec3(7.f, 0.f, 0.f));
 
-    MovementSystem(core);
+    ApplyMovement(core);
 
     const glm::vec3 &pos = PositionOf(core, camera.Id());
     EXPECT_FLOAT_EQ(pos.x, 7.f);
@@ -93,7 +93,7 @@ TEST(MovementSystem, EntityWithoutVelocityStaysStill)
     EXPECT_FLOAT_EQ(pos.z, 0.f);
 }
 
-TEST(MovementSystem, AccumulatesOverMultipleFrames)
+TEST(ApplyMovement, AccumulatesOverMultipleFrames)
 {
     Engine::Core core;
     SetDeltaTime(core, 0.25f);
@@ -102,9 +102,9 @@ TEST(MovementSystem, AccumulatesOverMultipleFrames)
     entity.AddComponent<Transform>(glm::vec3(0.f));
     entity.AddComponent<Velocity>(glm::vec3(4.f, 0.f, 0.f));
 
-    MovementSystem(core); // +1
-    MovementSystem(core); // +1
-    MovementSystem(core); // +1
+    ApplyMovement(core); // +1
+    ApplyMovement(core); // +1
+    ApplyMovement(core); // +1
 
     const glm::vec3 &pos = PositionOf(core, entity.Id()); // 3 * (4 * 0.25) = 3
     EXPECT_FLOAT_EQ(pos.x, 3.f);
