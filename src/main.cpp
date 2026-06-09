@@ -4,7 +4,6 @@
 #include "core/Core.hpp"
 #include "entity/Entity.hpp"
 #include "fmt/format.h"
-#include "game/component/Health.hpp"
 #include "game/loader/WadLoader.hpp"
 #include "glm/fwd.hpp"
 #include "glm/trigonometric.hpp"
@@ -38,11 +37,10 @@ int main()
     if (!LoadWad(core, "freedoom/freedoom1.wad"))
         return 84;
     core.RegisterSystem<Engine::Scheduler::Startup>([](Engine::Core &core) {
-        auto player = core.CreateEntity();
-        player.AddComponent<game::component::Health>();
-        player.AddComponent<Object::Component::Transform>(glm::vec3(0.75f, 1.0f, -2.5f), glm::vec3(1.0f),
+        auto camera = core.CreateEntity();
+        camera.AddComponent<Object::Component::Transform>(glm::vec3(0.75f, 1.0f, -2.5f), glm::vec3(1.0f),
                                                           glm::quat(glm::vec3(glm::radians(20.0f), 0.f, 0.f)));
-        player.AddComponent<Object::Component::Camera>();
+        camera.AddComponent<Object::Component::Camera>();
     });
     core.AddPlugins<Window::Plugin, DefaultPipeline::Plugin>();
     core.Run();
