@@ -33,7 +33,7 @@ int main()
 {
     Engine::Core core;
 
-    LoadWad(core, "freedoom1.wad");
+    LoadWad(core, "freedoom/freedoom1.wad");
 
     core.RegisterSystem<Engine::Scheduler::Startup>([](Engine::Core &core) {
         auto player = core.CreateEntity();
