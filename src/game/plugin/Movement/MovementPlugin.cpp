@@ -3,8 +3,5 @@
 #include "scheduler/Update.hpp"
 
 namespace game::plugin {
-void MovementPlugin::Bind()
-{
-    RegisterSystems<Engine::Scheduler::Update>(game::system::MovementSystem);
-}
+void MovementPlugin::Bind() { RegisterSystems<Engine::Scheduler::Update>(game::system::MovementSystem); }
 } // namespace game::plugin
