@@ -10,7 +10,8 @@ target("Doom93")
     add_deps("EngineSquared")
     add_files("src/**.cpp")
     add_includedirs("src/")
-    add_packages("entt", "glm", "spdlog", "fmt", "tinyobjloader")
+    add_packages("entt", "glm", "glfw", "spdlog", "fmt", "stb", "tinyobjloader", "wgpu-native", "glfw3webgpu",
+        "lodepng")
     set_rundir("$(projectdir)")
     if is_plat("macosx") then
         add_ldflags("-ObjC")
@@ -81,6 +82,10 @@ engine_test("HealthPipelineTests", {
     "src/game/system/DeathSystem/DeathSystem.cpp",
     "src/game/system/DeathSystem/DeathCleanup.cpp",
 })
+engine_test("MovementSystemTests", {
+    "tests/game/system/Movement/MovementSystemTests.cpp",
+    "src/game/system/Movement/MovementSystem.cpp",
+})
 
 local manual_tests = {
     WadLoaderTests = true,
@@ -88,6 +93,7 @@ local manual_tests = {
     DeathSystemTests = true,
     DeathCleanupTests = true,
     HealthPipelineTests = true,
+    MovementSystemTests = true,
 }
 
 for _, file in ipairs(os.files("tests/**.cpp")) do
