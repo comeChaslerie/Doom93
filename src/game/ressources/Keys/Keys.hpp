@@ -17,4 +17,4 @@ class Keys {
   private:
     std::unordered_map<component::KeysType, component::Key> _keys;
 };
-} // namespace game::component
+} // namespace game::ressource

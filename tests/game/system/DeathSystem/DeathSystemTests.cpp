@@ -1,6 +1,6 @@
 #include "core/Core.hpp"
 #include "entity/Entity.hpp"
-#include "game/component/Death/Dead.hpp"
+#include "game/component/Tags/Dead.hpp"
 #include "game/component/Death/DeathEvent.hpp"
 #include "game/component/Health.hpp"
 #include "game/system/DeathSystem/DeathSystem.hpp"
