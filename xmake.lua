@@ -82,6 +82,10 @@ engine_test("HealthPipelineTests", {
     "src/game/system/DeathSystem/DeathSystem.cpp",
     "src/game/system/DeathSystem/DeathCleanup.cpp",
 })
+engine_test("MovementSystemTests", {
+    "tests/game/system/Movement/MovementSystemTests.cpp",
+    "src/game/system/Movement/MovementSystem.cpp",
+})
 
 local manual_tests = {
     WadLoaderTests = true,
@@ -89,6 +93,7 @@ local manual_tests = {
     DeathSystemTests = true,
     DeathCleanupTests = true,
     HealthPipelineTests = true,
+    MovementSystemTests = true,
 }
 
 for _, file in ipairs(os.files("tests/**.cpp")) do
