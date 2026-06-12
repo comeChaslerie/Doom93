@@ -4,13 +4,19 @@
 #include "core/Core.hpp"
 #include "entity/Entity.hpp"
 #include "fmt/format.h"
+#include "game/component/MouseMovement/LastMousePos.hpp"
+#include "game/component/MouseMovement/Sensibility.hpp"
+#include "game/component/Tags/Player.hpp"
 #include "game/loader/WadLoader.hpp"
+#include "game/plugin/MouseMovement/MouseMovementPlugin.hpp"
+#include "game/plugin/Movement/MovementPlugin.hpp"
 #include "glm/fwd.hpp"
 #include "glm/trigonometric.hpp"
 #include "plugin/PluginDefaultPipeline.hpp"
 #include "plugin/PluginWindow.hpp"
 #include "scheduler/Startup.hpp"
 #include <exception>
+#include "resource/Window.hpp"
 
 namespace {
 /// @brief try to load WAD file
@@ -37,12 +43,19 @@ int main()
     if (!LoadWad(core, "freedoom/freedoom1.wad"))
         return 84;
     core.RegisterSystem<Engine::Scheduler::Startup>([](Engine::Core &core) {
-        auto camera = core.CreateEntity();
-        camera.AddComponent<Object::Component::Transform>(glm::vec3(0.75f, 1.0f, -2.5f), glm::vec3(1.0f),
+        auto window = core.GetResource<Window::Resource::Window>().GetGLFWWindow();
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        double posx = 0;
+        glfwGetCursorPos(window, &(posx), nullptr);
+        auto player = core.CreateEntity();
+        player.AddComponent<Object::Component::Transform>(glm::vec3(0.75f, 1.0f, -2.5f), glm::vec3(1.0f),
                                                           glm::quat(glm::vec3(glm::radians(20.0f), 0.f, 0.f)));
-        camera.AddComponent<Object::Component::Camera>();
+        player.AddComponent<Object::Component::Camera>();
+        player.AddComponent<game::component::LastMousePos>(static_cast<float>(posx));
+        player.AddComponent<game::component::Sensibility>();
+        player.AddComponent<game::component::Player>();
     });
-    core.AddPlugins<Window::Plugin, DefaultPipeline::Plugin>();
+    core.AddPlugins<Window::Plugin, DefaultPipeline::Plugin, game::plugin::MouseMovementPlugin, game::plugin::MovementPlugin>();
     core.Run();
     return 0;
 }
