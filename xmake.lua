@@ -89,7 +89,10 @@ engine_test("ApplyMovementTests", {
 engine_test("ComputeMovementVelocityTests", {
     "tests/game/system/Movement/ComputeMovementVelocityTests.cpp",
     "src/game/system/Movement/ComputeMovementVelocity.cpp",
-    "src/game/system/Movement/ComputeVelocity.cpp",
+})
+engine_test("ComputeMouseMovementTests", {
+    "tests/game/system/MouseMovement/ComputeMouseMovementTests.cpp",
+    "src/game/system/MouseMovement/ComputeMouseMovement.cpp",
 })
 
 local manual_tests = {
@@ -100,6 +103,7 @@ local manual_tests = {
     HealthPipelineTests = true,
     ApplyMovementTests = true,
     ComputeMovementVelocityTests = true,
+    ComputeMouseMovementTests = true,
 }
 
 for _, file in ipairs(os.files("tests/**.cpp")) do
