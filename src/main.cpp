@@ -14,6 +14,7 @@
 #include "game/loader/WadLoader.hpp"
 #include "game/plugin/MouseMovement/MouseMovementPlugin.hpp"
 #include "game/plugin/Movement/MovementPlugin.hpp"
+#include "game/system/MeshSystem/BuildFloorCeil/BuildFloorCeil.hpp"
 #include "game/system/MeshSystem/BuildWalls/BuildWalls.hpp"
 #include "glm/fwd.hpp"
 #include "plugin/PluginDefaultPipeline.hpp"
@@ -73,6 +74,11 @@ int main()
         auto walls = core.CreateEntity();
         walls.AddComponent<Object::Component::Transform>();
         walls.AddComponent<Object::Component::Mesh>(game::system::BuildWalls(level));
+
+        // Sols & plafonds (subsectors -> eventails).
+        auto flats = core.CreateEntity();
+        flats.AddComponent<Object::Component::Transform>();
+        flats.AddComponent<Object::Component::Mesh>(game::system::BuildFloorCeil(level));
     });
     core.AddPlugins<Window::Plugin, DefaultPipeline::Plugin, game::plugin::MouseMovementPlugin,
                     game::plugin::MovementPlugin>();

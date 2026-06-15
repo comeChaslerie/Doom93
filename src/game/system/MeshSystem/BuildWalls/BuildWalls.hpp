@@ -5,7 +5,7 @@
 
 namespace game::system {
 Object::Component::Mesh BuildWalls(const game::loader::Level &level);
-struct Walls {
+struct MeshConstructor {
     std::vector<glm::vec3> vertices;
     std::vector<glm::uint32_t> indices;
     std::vector<glm::vec3> normals;

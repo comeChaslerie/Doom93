@@ -13,20 +13,20 @@ void AddNormal(const glm::ivec2 &start, const glm::ivec2 &end, std::vector<glm::
     for (int i = 0; i < 4; i++)
         normals.push_back(normal);
 }
-void AddTextCoords(game::system::Walls &walls)
+void AddTextCoords(game::system::MeshConstructor &walls)
 {
     walls.texcoord.push_back({0, 0});
     walls.texcoord.push_back({1, 0});
     walls.texcoord.push_back({1, 1});
     walls.texcoord.push_back({0, 1});
 }
-void AddIndices(game::system::Walls &walls)
+void AddIndices(game::system::MeshConstructor &walls)
 {
     uint32_t base = walls.vertices.size();
 
     walls.indices.insert(walls.indices.end(), {base, base + 1, base + 2, base + 2, base + 3, base});
 }
-void AddVertices(game::system::Walls &walls, const glm::ivec2 &start, const glm::ivec2 &end,
+void AddVertices(game::system::MeshConstructor &walls, const glm::ivec2 &start, const glm::ivec2 &end,
                  const game::loader::Level &level, const game::loader::Linedef &linedef)
 {
     float floor = static_cast<float>(level.sectors[level.sidedefs[linedef.frontSidedef].sector].floorHeight);
@@ -37,7 +37,8 @@ void AddVertices(game::system::Walls &walls, const glm::ivec2 &start, const glm:
     walls.vertices.push_back(glm::vec3(end.x, ceil, end.y));
     walls.vertices.push_back(glm::vec3(start.x, ceil, start.y));
 }
-void AddNewWall(const game::loader::Level &level, const game::loader::Linedef &linedef, game::system::Walls &walls)
+void AddNewWall(const game::loader::Level &level, const game::loader::Linedef &linedef,
+                game::system::MeshConstructor &walls)
 {
     glm::ivec2 start = level.vertexes[linedef.startVertex];
     glm::ivec2 end = level.vertexes[linedef.endVertex];
@@ -52,10 +53,11 @@ void AddNewWall(const game::loader::Level &level, const game::loader::Linedef &l
 Object::Component::Mesh game::system::BuildWalls(const game::loader::Level &level)
 {
     Object::Component::Mesh mesh;
-    Walls walls;
+    MeshConstructor walls;
 
     for (const auto &linedef : level.linedefs)
-        AddNewWall(level, linedef, walls);
+        if (linedef.backSidedef < 0)
+            AddNewWall(level, linedef, walls);
     mesh.SetVertices(walls.vertices);
     mesh.SetIndices(walls.indices);
     mesh.SetNormals(walls.normals);
