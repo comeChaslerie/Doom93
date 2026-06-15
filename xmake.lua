@@ -94,6 +94,10 @@ engine_test("ComputeMouseMovementTests", {
     "tests/game/system/MouseMovement/ComputeMouseMovementTests.cpp",
     "src/game/system/MouseMovement/ComputeMouseMovement.cpp",
 })
+engine_test("BuildWallsTests", {
+    "tests/game/system/MeshSystem/BuildWallsTests.cpp",
+    "src/game/system/MeshSystem/BuildWalls/BuildWalls.cpp",
+})
 
 local manual_tests = {
     WadLoaderTests = true,
@@ -104,6 +108,7 @@ local manual_tests = {
     ApplyMovementTests = true,
     ComputeMovementVelocityTests = true,
     ComputeMouseMovementTests = true,
+    BuildWallsTests = true,
 }
 
 for _, file in ipairs(os.files("tests/**.cpp")) do
