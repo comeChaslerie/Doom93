@@ -1,19 +1,22 @@
 #include "component/Transform.hpp"
 #include "core/Core.hpp"
 #include "entity/Entity.hpp"
+#include "game/component/Speed.hpp"
+#include "game/component/Stat/Stat.hpp"
 #include "game/component/Velocity/Velocity.hpp"
 #include "game/system/Movement/ApplyMovement.hpp"
 #include "resource/Time.hpp"
 #include <glm/vec3.hpp>
 #include <gtest/gtest.h>
 
+using game::component::Speed;
+using game::component::Stat;
 using game::component::Velocity;
 using game::system::ApplyMovement;
 using Object::Component::Transform;
 
 namespace {
-// La resource Time existe deja (creee par le Core) ; on fixe juste un delta
-// deterministe au lieu d'appeler Time::Update qui lit l'horloge reelle.
+// La resource Time existe deja (creee par le Core) ; on fixe un delta deterministe.
 void SetDeltaTime(Engine::Core &core, float seconds)
 {
     core.GetResource<Engine::Resource::Time>()._elapsedTime = seconds;
@@ -25,7 +28,7 @@ const glm::vec3 &PositionOf(Engine::Core &core, Engine::EntityId id)
 }
 } // namespace
 
-TEST(ApplyMovement, AdvancesPositionByVelocityTimesDelta)
+TEST(ApplyMovement, ScalesByDeltaAndSpeed)
 {
     Engine::Core core;
     SetDeltaTime(core, 0.5f);
@@ -33,13 +36,12 @@ TEST(ApplyMovement, AdvancesPositionByVelocityTimesDelta)
     auto entity = core.CreateEntity();
     entity.AddComponent<Transform>(glm::vec3(0.f));
     entity.AddComponent<Velocity>(glm::vec3(2.f, 0.f, 0.f));
+    entity.AddComponent<Speed>(Stat<float>(10.f));
 
     ApplyMovement(core);
 
-    const glm::vec3 &pos = PositionOf(core, entity.Id()); // 2 * 0.5 = 1
-    EXPECT_FLOAT_EQ(pos.x, 1.f);
-    EXPECT_FLOAT_EQ(pos.y, 0.f);
-    EXPECT_FLOAT_EQ(pos.z, 0.f);
+    // 2 * 0.5 * 10 = 10
+    EXPECT_FLOAT_EQ(PositionOf(core, entity.Id()).x, 10.f);
 }
 
 TEST(ApplyMovement, MovesOnAllThreeAxes)
@@ -50,13 +52,29 @@ TEST(ApplyMovement, MovesOnAllThreeAxes)
     auto entity = core.CreateEntity();
     entity.AddComponent<Transform>(glm::vec3(10.f, 20.f, 30.f));
     entity.AddComponent<Velocity>(glm::vec3(1.f, -2.f, 3.f));
+    entity.AddComponent<Speed>(Stat<float>(2.f));
 
     ApplyMovement(core);
 
-    const glm::vec3 &pos = PositionOf(core, entity.Id());
-    EXPECT_FLOAT_EQ(pos.x, 11.f);
-    EXPECT_FLOAT_EQ(pos.y, 18.f);
-    EXPECT_FLOAT_EQ(pos.z, 33.f);
+    const glm::vec3 &pos = PositionOf(core, entity.Id()); // delta = v * 1 * 2
+    EXPECT_FLOAT_EQ(pos.x, 12.f);
+    EXPECT_FLOAT_EQ(pos.y, 16.f);
+    EXPECT_FLOAT_EQ(pos.z, 36.f);
+}
+
+TEST(ApplyMovement, DefaultSpeedIsApplied)
+{
+    Engine::Core core;
+    SetDeltaTime(core, 1.f);
+
+    auto entity = core.CreateEntity();
+    entity.AddComponent<Transform>(glm::vec3(0.f));
+    entity.AddComponent<Velocity>(glm::vec3(1.f, 0.f, 0.f));
+    entity.AddComponent<Speed>(); // defaut 250
+
+    ApplyMovement(core);
+
+    EXPECT_FLOAT_EQ(PositionOf(core, entity.Id()).x, 250.f);
 }
 
 TEST(ApplyMovement, ZeroDeltaKeepsPositionStill)
@@ -67,6 +85,7 @@ TEST(ApplyMovement, ZeroDeltaKeepsPositionStill)
     auto entity = core.CreateEntity();
     entity.AddComponent<Transform>(glm::vec3(5.f, 5.f, 5.f));
     entity.AddComponent<Velocity>(glm::vec3(100.f, 100.f, 100.f));
+    entity.AddComponent<Speed>(Stat<float>(10.f));
 
     ApplyMovement(core);
 
@@ -76,21 +95,19 @@ TEST(ApplyMovement, ZeroDeltaKeepsPositionStill)
     EXPECT_FLOAT_EQ(pos.z, 5.f);
 }
 
-TEST(ApplyMovement, EntityWithoutVelocityStaysStill)
+TEST(ApplyMovement, WithoutSpeedDoesNotMove)
 {
     Engine::Core core;
     SetDeltaTime(core, 1.f);
 
-    // Une camera : un Transform mais pas de Velocity -> ne doit pas bouger.
-    auto camera = core.CreateEntity();
-    camera.AddComponent<Transform>(glm::vec3(7.f, 0.f, 0.f));
+    // La camera : Transform + Velocity mais pas de Speed -> hors de la view -> immobile.
+    auto entity = core.CreateEntity();
+    entity.AddComponent<Transform>(glm::vec3(7.f, 0.f, 0.f));
+    entity.AddComponent<Velocity>(glm::vec3(1.f, 0.f, 0.f));
 
     ApplyMovement(core);
 
-    const glm::vec3 &pos = PositionOf(core, camera.Id());
-    EXPECT_FLOAT_EQ(pos.x, 7.f);
-    EXPECT_FLOAT_EQ(pos.y, 0.f);
-    EXPECT_FLOAT_EQ(pos.z, 0.f);
+    EXPECT_FLOAT_EQ(PositionOf(core, entity.Id()).x, 7.f);
 }
 
 TEST(ApplyMovement, AccumulatesOverMultipleFrames)
@@ -100,12 +117,13 @@ TEST(ApplyMovement, AccumulatesOverMultipleFrames)
 
     auto entity = core.CreateEntity();
     entity.AddComponent<Transform>(glm::vec3(0.f));
-    entity.AddComponent<Velocity>(glm::vec3(4.f, 0.f, 0.f));
+    entity.AddComponent<Velocity>(glm::vec3(1.f, 0.f, 0.f));
+    entity.AddComponent<Speed>(Stat<float>(4.f));
 
     ApplyMovement(core); // +1
     ApplyMovement(core); // +1
     ApplyMovement(core); // +1
 
-    const glm::vec3 &pos = PositionOf(core, entity.Id()); // 3 * (4 * 0.25) = 3
-    EXPECT_FLOAT_EQ(pos.x, 3.f);
+    // 3 * (1 * 0.25 * 4) = 3
+    EXPECT_FLOAT_EQ(PositionOf(core, entity.Id()).x, 3.f);
 }
