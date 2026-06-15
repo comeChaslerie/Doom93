@@ -27,14 +27,18 @@ game::loader::Level MakeLevel()
     sidedef.sector = 0;
     level.sidedefs.push_back(sidedef);
 
+    // -1 = aucun back sidedef -> linedef "une face" (mur solide). Sans ca,
+    // BuildWalls filtre les linedefs deux-faces et notre mini-niveau serait vide.
     game::loader::Linedef l0;
     l0.startVertex = 0;
     l0.endVertex = 1;
     l0.frontSidedef = 0;
+    l0.backSidedef = -1;
     game::loader::Linedef l1;
     l1.startVertex = 1;
     l1.endVertex = 2;
     l1.frontSidedef = 0;
+    l1.backSidedef = -1;
     level.linedefs = {l0, l1};
     return level;
 }
@@ -90,4 +94,43 @@ TEST(BuildWalls, IndicesUseAccumulatedBase)
     // Le 2e quad doit demarrer a base = 4 (et non 0) -> preuve de l'accumulation.
     const std::vector<uint32_t> expected = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
     EXPECT_EQ(mesh.GetIndices(), expected);
+}
+
+TEST(BuildWalls, SkipsTwoSidedLinedefs)
+{
+    // Un linedef "deux faces" (backSidedef >= 0) est une ouverture entre secteurs :
+    // il ne doit pas generer de mur.
+    game::loader::Level level;
+    level.vertexes = {
+        {0,  0 },
+        {10, 0 },
+        {10, 10}
+    };
+
+    game::loader::Sector sector;
+    sector.floorHeight = 0;
+    sector.ceilingHeight = 100;
+    level.sectors.push_back(sector);
+
+    game::loader::Sidedef sidedef;
+    sidedef.sector = 0;
+    level.sidedefs.push_back(sidedef);
+
+    game::loader::Linedef solid; // une face -> mur
+    solid.startVertex = 0;
+    solid.endVertex = 1;
+    solid.frontSidedef = 0;
+    solid.backSidedef = -1;
+    game::loader::Linedef opening; // deux faces -> ignore
+    opening.startVertex = 1;
+    opening.endVertex = 2;
+    opening.frontSidedef = 0;
+    opening.backSidedef = 0;
+    level.linedefs = {solid, opening};
+
+    auto mesh = BuildWalls(level);
+
+    // Seul le mur solide -> 1 quad -> 4 sommets, 6 indices.
+    EXPECT_EQ(mesh.GetVertices().size(), 4U);
+    EXPECT_EQ(mesh.GetIndices().size(), 6U);
 }
