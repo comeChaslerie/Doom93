@@ -2,12 +2,12 @@
 #include "component/Camera.hpp"
 #include "component/Transform.hpp"
 #include "core/Core.hpp"
+#include "entity/Entity.hpp"
 #include "game/component/MouseMovement/LastMousePos.hpp"
 #include "game/component/MouseMovement/Sensibility.hpp"
 #include "game/component/Speed.hpp"
 #include "game/component/Tags/Player.hpp"
 #include "game/component/Velocity/Velocity.hpp"
-#include "entity/Entity.hpp"
 
 namespace {
 /// @brief Set Player spawn
@@ -19,7 +19,7 @@ glm::vec3 SetSpawn(const auto &level)
             spawn = glm::vec3(thing.position.x, 41.f, thing.position.y);
     return spawn;
 }
-}
+} // namespace
 
 /// @brief Init Player and Camera entity components
 void utils::InitGame::InitPlayer(Engine::Core &core, const auto &level, const auto &window)
