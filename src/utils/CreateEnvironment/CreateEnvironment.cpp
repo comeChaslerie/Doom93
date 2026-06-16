@@ -27,7 +27,7 @@ void utils::CreateEnvironment::CreateWalls(Engine::Core &core, const game::loade
     for (auto &&[tex, mesh] : game::system::BuildWalls(level))
     {
         auto wall = std::ranges::find_if(lumpData.textures.begin(), lumpData.textures.end(),
-                                 [&tex](const game::loader::TextureDef &def) { return def.name == tex; });
+                                         [&tex](const game::loader::TextureDef &def) { return def.name == tex; });
         if (wall == lumpData.textures.end())
             continue;
         auto assembled = AssembleTexture::AssembleTexture(*wall, lumpData.pnames, lumpData.pictures);
@@ -55,7 +55,7 @@ void utils::CreateEnvironment::CreateFloorAndCeiling(Engine::Core &core, const g
     for (auto &&[tex, mesh] : game::system::BuildFloorCeil(level))
     {
         auto flat = std::ranges::find_if(lumpData.flats.begin(), lumpData.flats.end(),
-                                 [&tex](const game::loader::Flat &f) { return f.name == tex; });
+                                         [&tex](const game::loader::Flat &f) { return f.name == tex; });
         if (flat == lumpData.flats.end())
             continue;
         auto entity = core.CreateEntity();
