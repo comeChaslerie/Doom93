@@ -63,7 +63,7 @@ void InitPlayer(Engine::Core &core, const auto &level, const auto &window)
     auto player = core.CreateEntity();
     player.AddComponent<Object::Component::Transform>(SetSpawn(level));
     auto &camera = player.AddComponent<Object::Component::Camera>();
-    camera.farPlane = 10000.f;   // voit tout le niveau
+    camera.farPlane = 10000.f;
     camera.nearPlane = 1.f;
     double posx = 0;
     glfwGetCursorPos(window, &(posx), nullptr);

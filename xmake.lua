@@ -102,6 +102,10 @@ engine_test("BuildFloorCeilTests", {
     "tests/game/system/MeshSystem/BuildFloorCeilTests.cpp",
     "src/game/system/MeshSystem/BuildFloorCeil/BuildFloorCeil.cpp",
 })
+engine_test("AssembleTextureTests", {
+    "tests/utils/AssembleTexture/AssembleTextureTests.cpp",
+    "src/utils/AssembleTexture/AssembleTexture.cpp",
+})
 
 local manual_tests = {
     WadLoaderTests = true,
@@ -114,6 +118,7 @@ local manual_tests = {
     ComputeMouseMovementTests = true,
     BuildWallsTests = true,
     BuildFloorCeilTests = true,
+    AssembleTextureTests = true,
 }
 
 for _, file in ipairs(os.files("tests/**.cpp")) do
