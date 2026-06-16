@@ -4,6 +4,7 @@
 #include "game/system/MeshSystem/BuildWalls/BuildWalls.hpp"
 #include "glm/fwd.hpp"
 #include <cstdint>
+#include <map>
 #include <vector>
 
 namespace {
@@ -38,7 +39,8 @@ void AddFloorCeil(game::system::MeshConstructor &FloorCeil, std::vector<glm::ive
             FloorCeil.normals.push_back({0.f, -1.f, 0.f});
         else
             FloorCeil.normals.push_back({0.f, 1.f, 0.f});
-        FloorCeil.texcoord.push_back({0.f, 0.f});
+        FloorCeil.texcoord.push_back(
+            {static_cast<float>(pol.x) / 64.f, static_cast<float>(pol.y) / 64.f}); // au lieu de {0,0}
     }
     for (uint32_t i = 1; i + 1 < polygon.size(); i++)
     {
@@ -50,22 +52,27 @@ void AddFloorCeil(game::system::MeshConstructor &FloorCeil, std::vector<glm::ive
 }
 } // namespace
 
-Object::Component::Mesh game::system::BuildFloorCeil(const game::loader::Level &level)
+std::map<std::string, Object::Component::Mesh> game::system::BuildFloorCeil(const game::loader::Level &level)
 {
-    Object::Component::Mesh mesh;
+    std::map<std::string, Object::Component::Mesh> meshes;
+    std::map<std::string, MeshConstructor> floorCeil;
     std::vector<glm::ivec2> polygon;
-    MeshConstructor floorCeil;
 
     for (const auto &subsector : level.subsectors)
     {
         polygon = GetPolygon(subsector, level);
         const game::loader::Sector &sector = GetSector(subsector, level);
-        AddFloorCeil(floorCeil, polygon, static_cast<float>(sector.ceilingHeight), true);
-        AddFloorCeil(floorCeil, polygon, static_cast<float>(sector.floorHeight), false);
+        AddFloorCeil(floorCeil[sector.ceilingTexture], polygon, static_cast<float>(sector.ceilingHeight), true);
+        AddFloorCeil(floorCeil[sector.floorTexture], polygon, static_cast<float>(sector.floorHeight), false);
     }
-    mesh.SetIndices(floorCeil.indices);
-    mesh.SetVertices(floorCeil.vertices);
-    mesh.SetNormals(floorCeil.normals);
-    mesh.SetTexCoords(floorCeil.texcoord);
-    return mesh;
+    for (auto &&[tex, flat] : floorCeil)
+    {
+        Object::Component::Mesh mesh;
+        mesh.SetIndices(floorCeil[tex].indices);
+        mesh.SetVertices(floorCeil[tex].vertices);
+        mesh.SetNormals(floorCeil[tex].normals);
+        mesh.SetTexCoords(floorCeil[tex].texcoord);
+        meshes[tex] = std::move(mesh);
+    }
+    return meshes;
 }
