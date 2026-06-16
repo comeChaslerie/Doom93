@@ -81,7 +81,7 @@ TEST_F(WadLoaderTest, FirstLevelHasGeometry)
 TEST_F(WadLoaderTest, LevelE1M1IsPresentAndComplete)
 {
     const auto &levels = Wad().levels;
-    const auto it = std::find_if(levels.begin(), levels.end(), [](const Level &lvl) { return lvl.name == "E1M1"; });
+    const auto it = std::ranges::find_if(levels.begin(), levels.end(), [](const Level &lvl) { return lvl.name == "E1M1"; });
 
     ASSERT_NE(it, levels.end()) << "E1M1 absent du WAD";
     EXPECT_FALSE(it->vertexes.empty());

@@ -22,7 +22,7 @@ void SetTextureLine(utils::AssembleTexture::AssembledTexture &texture, const gam
 void SetTexture(const game::loader::TextureDef &textureDef, const std::vector<game::loader::Picture> &pictures,
                 const std::string &patchName, utils::AssembleTexture::AssembledTexture &texture, auto &patch)
 {
-    auto picture = std::find_if(pictures.begin(), pictures.end(), [&patchName](const game::loader::Picture &pictures) {
+    auto picture = std::ranges::find_if(pictures.begin(), pictures.end(), [&patchName](const game::loader::Picture &pictures) {
         return pictures.name == patchName;
     });
     if (picture == pictures.end())
