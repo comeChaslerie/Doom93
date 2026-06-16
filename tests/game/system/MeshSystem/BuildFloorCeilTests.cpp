@@ -2,11 +2,14 @@
 #include "game/system/MeshSystem/BuildFloorCeil/BuildFloorCeil.hpp"
 #include <glm/vec3.hpp>
 #include <gtest/gtest.h>
+#include <map>
+#include <string>
 
 using game::system::BuildFloorCeil;
 
 namespace {
-// Mini-niveau : 1 subsector triangulaire (3 segs), secteur sol 0 / plafond 100.
+// Mini-niveau : 1 subsector triangulaire (3 segs), secteur sol 0 / plafond 100,
+// avec des noms de texture DISTINCTS pour verifier le grouping.
 //   sommets du polygone : (0,0), (10,0), (10,10)
 game::loader::Level MakeLevel()
 {
@@ -20,6 +23,8 @@ game::loader::Level MakeLevel()
     game::loader::Sector sector;
     sector.floorHeight = 0;
     sector.ceilingHeight = 100;
+    sector.floorTexture = "FLOOR";
+    sector.ceilingTexture = "CEIL";
     level.sectors.push_back(sector);
 
     game::loader::Sidedef sidedef;
@@ -54,42 +59,44 @@ void ExpectVec3(const glm::vec3 &v, float x, float y, float z)
 }
 } // namespace
 
-TEST(BuildFloorCeil, FloorAndCeilingPerSubsector)
+TEST(BuildFloorCeil, OneMeshPerTexture)
 {
-    auto mesh = BuildFloorCeil(MakeLevel());
+    auto meshes = BuildFloorCeil(MakeLevel());
 
-    // 1 triangle convexe -> eventail = 1 triangle par face. Sol + plafond -> 2 faces.
-    // 3 sommets/face -> 6 sommets, 6 indices, 6 normales/UV.
-    EXPECT_EQ(mesh.GetVertices().size(), 6U);
-    EXPECT_EQ(mesh.GetIndices().size(), 6U);
-    EXPECT_EQ(mesh.GetNormals().size(), 6U);
-    EXPECT_EQ(mesh.GetTexCoords().size(), 6U);
+    // Sol et plafond ont des noms distincts -> deux groupes/meshes separes.
+    EXPECT_EQ(meshes.size(), 2U);
+    EXPECT_EQ(meshes.count("FLOOR"), 1U);
+    EXPECT_EQ(meshes.count("CEIL"), 1U);
 }
 
-TEST(BuildFloorCeil, CeilingThenFloorHeights)
+TEST(BuildFloorCeil, FloorMeshAtFloorHeight)
 {
-    auto mesh = BuildFloorCeil(MakeLevel());
-    const auto &v = mesh.GetVertices();
+    auto meshes = BuildFloorCeil(MakeLevel());
+    const auto &floor = meshes.at("FLOOR");
 
-    // Le plafond est pousse en premier (y=100), puis le sol (y=0).
-    ExpectVec3(v[0], 0.f, 100.f, 0.f);
-    ExpectVec3(v[3], 0.f, 0.f, 0.f);
+    EXPECT_EQ(floor.GetVertices().size(), 3U); // 1 triangle
+    EXPECT_EQ(floor.GetIndices().size(), 3U);
+    ExpectVec3(floor.GetVertices()[0], 0.f, 0.f, 0.f); // y = floorHeight
+    ExpectVec3(floor.GetNormals()[0], 0.f, 1.f, 0.f);  // sol -> normale vers le haut
 }
 
-TEST(BuildFloorCeil, NormalsFaceUpForFloorDownForCeiling)
+TEST(BuildFloorCeil, CeilingMeshAtCeilingHeight)
 {
-    auto mesh = BuildFloorCeil(MakeLevel());
-    const auto &n = mesh.GetNormals();
+    auto meshes = BuildFloorCeil(MakeLevel());
+    const auto &ceil = meshes.at("CEIL");
 
-    ExpectVec3(n[0], 0.f, -1.f, 0.f); // plafond (vers le bas)
-    ExpectVec3(n[3], 0.f, 1.f, 0.f);  // sol (vers le haut)
+    EXPECT_EQ(ceil.GetVertices().size(), 3U);
+    ExpectVec3(ceil.GetVertices()[0], 0.f, 100.f, 0.f); // y = ceilingHeight
+    ExpectVec3(ceil.GetNormals()[0], 0.f, -1.f, 0.f);   // plafond -> normale vers le bas
 }
 
-TEST(BuildFloorCeil, FloorAndCeilingHaveOppositeWinding)
+TEST(BuildFloorCeil, OppositeWindingPerFace)
 {
-    auto mesh = BuildFloorCeil(MakeLevel());
+    auto meshes = BuildFloorCeil(MakeLevel());
 
-    // plafond (base 0) : {0,1,2} ; sol (base 3) : winding inverse {3,5,4}.
-    const std::vector<uint32_t> expected = {0, 1, 2, 3, 5, 4};
-    EXPECT_EQ(mesh.GetIndices(), expected);
+    // Chaque mesh a sa propre numerotation (base 0). Windings opposes.
+    const std::vector<uint32_t> ceilExpected = {0, 1, 2};
+    const std::vector<uint32_t> floorExpected = {0, 2, 1};
+    EXPECT_EQ(meshes.at("CEIL").GetIndices(), ceilExpected);
+    EXPECT_EQ(meshes.at("FLOOR").GetIndices(), floorExpected);
 }

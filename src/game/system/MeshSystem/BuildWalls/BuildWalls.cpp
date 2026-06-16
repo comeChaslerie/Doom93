@@ -50,17 +50,20 @@ void AddNewWall(const game::loader::Level &level, const game::loader::Linedef &l
 }
 } // namespace
 
-Object::Component::Mesh game::system::BuildWalls(const game::loader::Level &level)
+std::map<std::string, Object::Component::Mesh> game::system::BuildWalls(const game::loader::Level &level)
 {
-    Object::Component::Mesh mesh;
-    MeshConstructor walls;
+    std::map<std::string, Object::Component::Mesh> meshes;
+    std::map<std::string, MeshConstructor> walls;
 
     for (const auto &linedef : level.linedefs)
         if (linedef.backSidedef < 0)
-            AddNewWall(level, linedef, walls);
-    mesh.SetVertices(walls.vertices);
-    mesh.SetIndices(walls.indices);
-    mesh.SetNormals(walls.normals);
-    mesh.SetTexCoords(walls.texcoord);
-    return mesh;
+            AddNewWall(level, linedef, walls[level.sidedefs[linedef.frontSidedef].middle]);
+    for (auto &[string, wall] : walls)
+    {
+        meshes[string].SetVertices(wall.vertices);
+        meshes[string].SetIndices(wall.indices);
+        meshes[string].SetNormals(wall.normals);
+        meshes[string].SetTexCoords(wall.texcoord);
+    }
+    return meshes;
 }
