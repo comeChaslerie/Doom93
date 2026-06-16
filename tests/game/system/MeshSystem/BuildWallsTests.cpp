@@ -2,11 +2,14 @@
 #include "game/system/MeshSystem/BuildWalls/BuildWalls.hpp"
 #include <glm/vec3.hpp>
 #include <gtest/gtest.h>
+#include <map>
+#include <string>
 
 using game::system::BuildWalls;
 
 namespace {
-// Mini-niveau : 3 sommets, 1 secteur (sol 0, plafond 100), 1 sidedef, 2 linedefs.
+// Mini-niveau : 3 sommets, 1 secteur, 1 sidedef (texture "WALL"), 2 linedefs
+// "une face" qui partagent donc la meme texture -> un seul groupe/mesh.
 //   linedef 0 : (0,0) -> (10,0)
 //   linedef 1 : (10,0) -> (10,10)
 game::loader::Level MakeLevel()
@@ -25,10 +28,10 @@ game::loader::Level MakeLevel()
 
     game::loader::Sidedef sidedef;
     sidedef.sector = 0;
+    sidedef.middle = "WALL";
     level.sidedefs.push_back(sidedef);
 
-    // -1 = aucun back sidedef -> linedef "une face" (mur solide). Sans ca,
-    // BuildWalls filtre les linedefs deux-faces et notre mini-niveau serait vide.
+    // backSidedef = -1 -> mur solide (une face). Sinon BuildWalls le filtre.
     game::loader::Linedef l0;
     l0.startVertex = 0;
     l0.endVertex = 1;
@@ -51,11 +54,13 @@ void ExpectVec3(const glm::vec3 &v, float x, float y, float z)
 }
 } // namespace
 
-TEST(BuildWalls, OneQuadPerLinedef)
+TEST(BuildWalls, GroupedUnderSharedTexture)
 {
-    auto mesh = BuildWalls(MakeLevel());
+    auto meshes = BuildWalls(MakeLevel());
 
-    // 2 linedefs -> 2 quads -> 8 sommets, 12 indices, et autant de normales/UV.
+    // Les 2 murs partagent "WALL" -> un seul mesh, 2 quads.
+    EXPECT_EQ(meshes.size(), 1U);
+    const auto &mesh = meshes.at("WALL");
     EXPECT_EQ(mesh.GetVertices().size(), 8U);
     EXPECT_EQ(mesh.GetIndices().size(), 12U);
     EXPECT_EQ(mesh.GetNormals().size(), 8U);
@@ -64,8 +69,8 @@ TEST(BuildWalls, OneQuadPerLinedef)
 
 TEST(BuildWalls, FirstQuadPositions)
 {
-    auto mesh = BuildWalls(MakeLevel());
-    const auto &v = mesh.GetVertices();
+    auto meshes = BuildWalls(MakeLevel());
+    const auto &v = meshes.at("WALL").GetVertices();
 
     // linedef 0 : (0,0)->(10,0), sol 0 / plafond 100. Mapping (mapX, h, mapY).
     ExpectVec3(v[0], 0.f, 0.f, 0.f);    // start, sol
@@ -74,32 +79,17 @@ TEST(BuildWalls, FirstQuadPositions)
     ExpectVec3(v[3], 0.f, 100.f, 0.f);  // start, plafond
 }
 
-TEST(BuildWalls, SecondQuadUsesItsOwnVertexes)
-{
-    auto mesh = BuildWalls(MakeLevel());
-    const auto &v = mesh.GetVertices();
-
-    // linedef 1 : (10,0)->(10,10). Mur dans le plan X=10, le long de Z.
-    ExpectVec3(v[4], 10.f, 0.f, 0.f);
-    ExpectVec3(v[5], 10.f, 0.f, 10.f);
-    ExpectVec3(v[6], 10.f, 100.f, 10.f);
-    ExpectVec3(v[7], 10.f, 100.f, 0.f);
-}
-
 TEST(BuildWalls, IndicesUseAccumulatedBase)
 {
-    auto mesh = BuildWalls(MakeLevel());
+    auto meshes = BuildWalls(MakeLevel());
 
-    // Chaque quad : {base, base+1, base+2, base+2, base+3, base}.
-    // Le 2e quad doit demarrer a base = 4 (et non 0) -> preuve de l'accumulation.
+    // 2e quad demarre a base = 4 -> preuve de l'accumulation dans le meme mesh.
     const std::vector<uint32_t> expected = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
-    EXPECT_EQ(mesh.GetIndices(), expected);
+    EXPECT_EQ(meshes.at("WALL").GetIndices(), expected);
 }
 
-TEST(BuildWalls, SkipsTwoSidedLinedefs)
+TEST(BuildWalls, GroupsDifferentTexturesSeparately)
 {
-    // Un linedef "deux faces" (backSidedef >= 0) est une ouverture entre secteurs :
-    // il ne doit pas generer de mur.
     game::loader::Level level;
     level.vertexes = {
         {0,  0 },
@@ -108,12 +98,52 @@ TEST(BuildWalls, SkipsTwoSidedLinedefs)
     };
 
     game::loader::Sector sector;
-    sector.floorHeight = 0;
+    sector.ceilingHeight = 100;
+    level.sectors.push_back(sector);
+
+    game::loader::Sidedef a;
+    a.sector = 0;
+    a.middle = "WALL_A";
+    game::loader::Sidedef b;
+    b.sector = 0;
+    b.middle = "WALL_B";
+    level.sidedefs = {a, b};
+
+    game::loader::Linedef l0;
+    l0.startVertex = 0;
+    l0.endVertex = 1;
+    l0.frontSidedef = 0; // texture WALL_A
+    l0.backSidedef = -1;
+    game::loader::Linedef l1;
+    l1.startVertex = 1;
+    l1.endVertex = 2;
+    l1.frontSidedef = 1; // texture WALL_B
+    l1.backSidedef = -1;
+    level.linedefs = {l0, l1};
+
+    auto meshes = BuildWalls(level);
+
+    EXPECT_EQ(meshes.size(), 2U);
+    EXPECT_EQ(meshes.at("WALL_A").GetVertices().size(), 4U);
+    EXPECT_EQ(meshes.at("WALL_B").GetVertices().size(), 4U);
+}
+
+TEST(BuildWalls, SkipsTwoSidedLinedefs)
+{
+    game::loader::Level level;
+    level.vertexes = {
+        {0,  0 },
+        {10, 0 },
+        {10, 10}
+    };
+
+    game::loader::Sector sector;
     sector.ceilingHeight = 100;
     level.sectors.push_back(sector);
 
     game::loader::Sidedef sidedef;
     sidedef.sector = 0;
+    sidedef.middle = "WALL";
     level.sidedefs.push_back(sidedef);
 
     game::loader::Linedef solid; // une face -> mur
@@ -128,9 +158,9 @@ TEST(BuildWalls, SkipsTwoSidedLinedefs)
     opening.backSidedef = 0;
     level.linedefs = {solid, opening};
 
-    auto mesh = BuildWalls(level);
+    auto meshes = BuildWalls(level);
 
-    // Seul le mur solide -> 1 quad -> 4 sommets, 6 indices.
-    EXPECT_EQ(mesh.GetVertices().size(), 4U);
-    EXPECT_EQ(mesh.GetIndices().size(), 6U);
+    // Seul le mur solide -> 1 mesh, 1 quad.
+    EXPECT_EQ(meshes.size(), 1U);
+    EXPECT_EQ(meshes.at("WALL").GetVertices().size(), 4U);
 }

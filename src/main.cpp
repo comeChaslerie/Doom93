@@ -27,7 +27,7 @@ void Startup(Engine::Core &core)
         // Helpers
         utils::InitGame::ConfigureWindow(core, window);
         utils::InitGame::InitPlayer(core, level, window);
-        utils::CreateEnvironment::CreateWalls(core, level);
+        utils::CreateEnvironment::CreateWalls(core, level, lumpData, deviceContext, queue, textureContainer);
         utils::CreateEnvironment::CreateFloorAndCeiling(core, level, lumpData, deviceContext, queue, textureContainer);
     });
 }
@@ -35,9 +35,8 @@ void AddPlugins(Engine::Core &core)
 {
     core.AddPlugins<Window::Plugin, DefaultPipeline::Plugin, game::plugin::MouseMovementPlugin,
                     game::plugin::MovementPlugin>();
-    
 }
-}
+} // namespace
 
 int main()
 {

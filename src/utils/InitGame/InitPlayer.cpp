@@ -1,4 +1,5 @@
 #include "utils/InitGame/InitPlayer.hpp"
+#include "GLFW/glfw3.h"
 #include "component/Camera.hpp"
 #include "component/Transform.hpp"
 #include "core/Core.hpp"
@@ -8,10 +9,11 @@
 #include "game/component/Speed.hpp"
 #include "game/component/Tags/Player.hpp"
 #include "game/component/Velocity/Velocity.hpp"
+#include "game/loader/LumpsData.hpp"
 
 namespace {
 /// @brief Set Player spawn
-glm::vec3 SetSpawn(const auto &level)
+glm::vec3 SetSpawn(const game::loader::Level &level)
 {
     glm::vec3 spawn(0.f, 41.f, 0.f);
     for (const auto &thing : level.things)
@@ -22,7 +24,7 @@ glm::vec3 SetSpawn(const auto &level)
 } // namespace
 
 /// @brief Init Player and Camera entity components
-void utils::InitGame::InitPlayer(Engine::Core &core, const auto &level, const auto &window)
+void utils::InitGame::InitPlayer(Engine::Core &core, const game::loader::Level &level, GLFWwindow *window)
 {
     auto player = core.CreateEntity();
     player.AddComponent<Object::Component::Transform>(SetSpawn(level));
