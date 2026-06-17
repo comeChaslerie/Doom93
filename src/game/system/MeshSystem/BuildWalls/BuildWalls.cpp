@@ -5,20 +5,21 @@
 #include <vector>
 
 namespace {
-void AddBackFaces(game::system::BuildHelpers &helper, const game::loader::Sector &back, const game::loader::Level &level, const game::loader::Linedef &linedef)
+void AddBackFaces(game::system::BuildHelpers &helper, const game::loader::Sector &back,
+                  const game::loader::Level &level, const game::loader::Linedef &linedef)
 {
     auto start = helper.end;
     auto end = helper.start;
 
     if (helper.front.floorHeight > back.floorHeight && level.sidedefs[linedef.backSidedef].lower != "-")
-        game::system::AddQuad(helper.walls[level.sidedefs[linedef.backSidedef].lower], back.floorHeight, helper.front.floorHeight,
-                              start, end);
+        game::system::AddQuad(helper.walls[level.sidedefs[linedef.backSidedef].lower], back.floorHeight,
+                              helper.front.floorHeight, start, end);
     if (back.ceilingHeight < helper.front.ceilingHeight && helper.frontSidedef.upper != "-")
         game::system::AddQuad(helper.walls[helper.frontSidedef.upper], back.ceilingHeight, helper.front.ceilingHeight,
                               start, end);
     if (helper.front.ceilingHeight < back.ceilingHeight && level.sidedefs[linedef.backSidedef].upper != "-")
-        game::system::AddQuad(helper.walls[level.sidedefs[linedef.backSidedef].upper], helper.front.ceilingHeight, back.ceilingHeight,
-                              start, end);
+        game::system::AddQuad(helper.walls[level.sidedefs[linedef.backSidedef].upper], helper.front.ceilingHeight,
+                              back.ceilingHeight, start, end);
 }
 void AddBackSidedef(const game::loader::Level &level, const game::loader::Linedef &linedef,
                     game::system::BuildHelpers &helper)

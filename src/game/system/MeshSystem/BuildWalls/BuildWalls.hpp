@@ -24,5 +24,6 @@ void AddTextCoords(game::system::MeshConstructor &walls);
 void AddIndices(game::system::MeshConstructor &walls);
 void AddVertices(game::system::MeshConstructor &wall, const glm::ivec2 &start, const glm::ivec2 &end, float yBottom,
                  float yTop);
-void AddQuad(game::system::MeshConstructor &wall, int yBottom, int yTop, const glm::ivec2 &start, const glm::ivec2 &end);
+void AddQuad(game::system::MeshConstructor &wall, int yBottom, int yTop, const glm::ivec2 &start,
+             const glm::ivec2 &end);
 } // namespace game::system
