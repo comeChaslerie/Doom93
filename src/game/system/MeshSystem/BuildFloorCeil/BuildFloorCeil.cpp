@@ -4,22 +4,28 @@
 #include "game/system/MeshSystem/BuildWalls/BuildWalls.hpp"
 #include "glm/fwd.hpp"
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <map>
 #include <vector>
-#include <cmath>
 
 namespace {
-void GetVertexAndCentroid(const game::loader::SubSector &subsector, const game::loader::Level &level, std::vector<glm::ivec2> &polygon, glm::vec2 &centroid)
+void GetVertexAndCentroid(const game::loader::SubSector &subsector, const game::loader::Level &level,
+                          std::vector<glm::ivec2> &polygon, glm::vec2 &centroid)
 {
-    for (int i = 0; i < subsector.segCount; i++) {
-        if (std::find(polygon.begin(), polygon.end(), level.vertexes[level.segs[subsector.firstSeg + i].startVertex]) == polygon.end()) {
+    for (int i = 0; i < subsector.segCount; i++)
+    {
+        if (std::find(polygon.begin(), polygon.end(), level.vertexes[level.segs[subsector.firstSeg + i].startVertex]) ==
+            polygon.end())
+        {
             auto pol = level.vertexes[level.segs[subsector.firstSeg + i].startVertex];
             polygon.push_back(pol);
             centroid += pol;
         }
-        if (std::find(polygon.begin(), polygon.end(), level.vertexes[level.segs[subsector.firstSeg + i].endVertex]) == polygon.end()) {
+        if (std::find(polygon.begin(), polygon.end(), level.vertexes[level.segs[subsector.firstSeg + i].endVertex]) ==
+            polygon.end())
+        {
             auto pol = level.vertexes[level.segs[subsector.firstSeg + i].endVertex];
             polygon.push_back(pol);
             centroid += pol;
@@ -30,7 +36,8 @@ std::vector<glm::ivec2> SortVertex(std::multimap<float, glm::ivec2> &angles)
 {
     std::vector<glm::ivec2> vertexes;
 
-    for (auto &&[angle, vertex] : angles) {
+    for (auto &&[angle, vertex] : angles)
+    {
         vertexes.push_back(vertex);
     }
     return vertexes;
