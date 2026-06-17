@@ -3,17 +3,51 @@
 #include "game/loader/LumpsData.hpp"
 #include "game/system/MeshSystem/BuildWalls/BuildWalls.hpp"
 #include "glm/fwd.hpp"
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <vector>
+#include <cmath>
 
 namespace {
+void GetVertexAndCentroid(const game::loader::SubSector &subsector, const game::loader::Level &level, std::vector<glm::ivec2> &polygon, glm::vec2 &centroid)
+{
+    for (int i = 0; i < subsector.segCount; i++) {
+        if (std::find(polygon.begin(), polygon.end(), level.vertexes[level.segs[subsector.firstSeg + i].startVertex]) == polygon.end()) {
+            auto pol = level.vertexes[level.segs[subsector.firstSeg + i].startVertex];
+            polygon.push_back(pol);
+            centroid += pol;
+        }
+        if (std::find(polygon.begin(), polygon.end(), level.vertexes[level.segs[subsector.firstSeg + i].endVertex]) == polygon.end()) {
+            auto pol = level.vertexes[level.segs[subsector.firstSeg + i].endVertex];
+            polygon.push_back(pol);
+            centroid += pol;
+        }
+    }
+}
+std::vector<glm::ivec2> SortVertex(std::multimap<float, glm::ivec2> &angles)
+{
+    std::vector<glm::ivec2> vertexes;
+
+    for (auto &&[angle, vertex] : angles) {
+        vertexes.push_back(vertex);
+    }
+    return vertexes;
+}
 std::vector<glm::ivec2> GetPolygon(const game::loader::SubSector &subsector, const game::loader::Level &level)
 {
     std::vector<glm::ivec2> polygon;
+    std::multimap<float, glm::ivec2> angles;
+    glm::vec2 centroid(0.f, 0.f);
 
-    for (int i = 0; i < subsector.segCount; i++)
-        polygon.push_back(level.vertexes[level.segs[subsector.firstSeg + i].startVertex]);
+    GetVertexAndCentroid(subsector, level, polygon, centroid);
+    if (polygon.empty())
+        return polygon;
+    centroid /= polygon.size();
+    for (auto &pol : polygon)
+        angles.emplace(std::atan2(static_cast<float>(pol.y) - centroid.y, static_cast<float>(pol.x) - centroid.x), pol);
+    polygon = SortVertex(angles);
     return polygon;
 }
 const game::loader::Sector &GetSector(const game::loader::SubSector &subsector, const game::loader::Level &level)
