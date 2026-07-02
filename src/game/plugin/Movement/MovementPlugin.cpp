@@ -12,9 +12,9 @@ namespace game::plugin {
 void MovementPlugin::Bind()
 {
     auto &keys = RegisterResource(game::ressource::Keys{});
-    keys.SetKeyCode(component::KeysType::UP_Key, GLFW_KEY_Z);
+    keys.SetKeyCode(component::KeysType::UP_Key, GLFW_KEY_W);
     keys.SetKeyCode(component::KeysType::DOWN_Key, GLFW_KEY_S);
-    keys.SetKeyCode(component::KeysType::LEFT_Key, GLFW_KEY_Q);
+    keys.SetKeyCode(component::KeysType::LEFT_Key, GLFW_KEY_A);
     keys.SetKeyCode(component::KeysType::RIGHT_Key, GLFW_KEY_D);
     RequirePlugins<Input::Plugin>();
     RegisterSystems<Engine::Scheduler::Update>(system::UpdateKeysState, system::ComputeMovement,
