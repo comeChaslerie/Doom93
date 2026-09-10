@@ -94,7 +94,7 @@ Systems are registered on Engine²'s scheduler (`Startup`, `Update`) from
 │       ├── component/        # ECS components (data)
 │       └── system/           # ECS systems (logic)
 ├── tests/                    # GoogleTest suites (mirror of src/)
-├── assets/                   # game resources (see below)
+├── freedoom/                 # Freedoom WAD and licences (see below)
 ├── EngineSquared/            # submodule: the Engine² engine
 ├── xmake.lua                 # build definition and test targets
 └── .github/workflows/        # CI pipelines
@@ -102,9 +102,24 @@ Systems are registered on Engine²'s scheduler (`Startup`, `Update`) from
 
 ## Assets
 
-Resources are organized by category under `assets/`:
-`audio/`, `engine/`, `entities/`, `environment/`, `levels/`, `ui/`.
+Game data lives in [`freedoom/`](freedoom/) at the repository root:
 
-They come from the free **[Freedoom](https://freedoom.github.io/)** project — see
-[`assets/FREEDOOM-CREDITS.txt`](assets/FREEDOOM-CREDITS.txt) and
-[`assets/FREEDOOM-COPYING.txt`](assets/FREEDOOM-COPYING.txt).
+```
+freedoom/
+├── freedoom1.wad             # levels, textures, flats, sprites and palettes
+├── FREEDOOM-CREDITS.txt
+└── FREEDOOM-COPYING.txt
+```
+
+Everything the game needs is inside the single WAD file: the loader
+([`src/game/loader/`](src/game/loader/)) parses its lumps at startup, so there
+are no separate texture or level files to manage.
+
+The WAD is committed to the repository — `.gitignore` whitelists `freedoom/**`
+— so there is no download step after cloning. It is opened by a path relative
+to the project root in [`src/main.cpp`](src/main.cpp), which is why `xmake.lua`
+sets `set_rundir("$(projectdir)")` on every target that touches it.
+
+The data comes from the free **[Freedoom](https://freedoom.github.io/)** project
+— see [`freedoom/FREEDOOM-CREDITS.txt`](freedoom/FREEDOOM-CREDITS.txt) and
+[`freedoom/FREEDOOM-COPYING.txt`](freedoom/FREEDOOM-COPYING.txt).

@@ -9,7 +9,7 @@ using game::loader::Level;
 using game::loader::LumpData;
 
 namespace {
-constexpr const char *WAD_PATH = "freedoom1.wad";
+constexpr const char *WAD_PATH = "freedoom/freedoom1.wad";
 
 // Constantes du format / de la fixture freedoom1.wad (verifiees a la main).
 constexpr std::size_t EXPECTED_PALETTES = 14;  // PLAYPAL : 14 palettes standard
@@ -37,7 +37,7 @@ class WadLoaderTest : public ::testing::Test {
     void SetUp() override
     {
         if (!_loaded)
-            GTEST_SKIP() << "freedoom1.wad introuvable (cwd=" << std::filesystem::current_path().string() << ")";
+            GTEST_SKIP() << WAD_PATH << " introuvable (cwd=" << std::filesystem::current_path().string() << ")";
     }
 };
 LumpData WadLoaderTest::_wad;
