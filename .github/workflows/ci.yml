@@ -2,9 +2,8 @@ name: ci
 
 on:
   push:
+    branches: [ main ]
   pull_request:
-  release:
-    types: [ published ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.base_ref }}-${{
@@ -86,7 +85,7 @@ jobs:
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 22
-          sudo apt install -y clang-tidy
+          sudo apt install -y clang-tidy-22
 
       - name: Setup Linux dependencies
         run: |
@@ -102,9 +101,31 @@ jobs:
           actions-cache-key: "clang-tidy"
           build-cache: true
           build-cache-key: "clang-tidy"
-      - name: Run clang-tidy
+      - name: Generate compile_commands.json
         run: |
-          xmake check -y clang.tidy --configfile=./.clang-tidy
+          xmake f -y
+          xmake project -k compile_commands
+
+      # On PRs, only analyze the .cpp files touched by the PR (the full run on
+      # the whole project takes ~40 minutes). run-clang-tidy matches its
+      # arguments against the entries of compile_commands.json, so files
+      # outside src/ (EngineSquared, tests) are never analyzed.
+      - name: Run clang-tidy on changed files (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          CHANGED_FILES=$(git diff --name-only --diff-filter=d "origin/${{ github.base_ref }}...HEAD" -- 'src/*.cpp')
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No .cpp files changed under src/, skipping clang-tidy"
+            exit 0
+          fi
+          echo "Analyzing:"
+          echo "$CHANGED_FILES"
+          run-clang-tidy-22 -quiet -j "$(nproc)" -p . $CHANGED_FILES
+
+      - name: Run clang-tidy on the whole project (main)
+        if: github.event_name != 'pull_request'
+        run: |
+          run-clang-tidy-22 -quiet -j "$(nproc)" -p . "$PWD/src/"
 
   check_program_compilation:
     name: Build and verify binaries
@@ -177,10 +198,6 @@ jobs:
           actions-cache-key: "${{ matrix.os }}-tests"
           build-cache: true
           build-cache-key: "${{ matrix.os }}-tests"
-
-      - name: Clean build artifact
-        run: |
-          xmake clean -a
 
       - name: Run tests
         run: |
