@@ -1,6 +1,7 @@
 #include "game/system/MeshSystem/BuildFloorCeil/BuildFloorCeil.hpp"
 #include "component/Mesh.hpp"
 #include "game/loader/LumpsData.hpp"
+#include "game/system/MeshSystem/BuildFloorCeil/SubsectorPolygon.hpp"
 #include "game/system/MeshSystem/BuildWalls/BuildWalls.hpp"
 #include "glm/fwd.hpp"
 #include <cstdint>
@@ -8,14 +9,6 @@
 #include <vector>
 
 namespace {
-std::vector<glm::ivec2> GetPolygon(const game::loader::SubSector &subsector, const game::loader::Level &level)
-{
-    std::vector<glm::ivec2> polygon;
-
-    for (int i = 0; i < subsector.segCount; i++)
-        polygon.push_back(level.vertexes[level.segs[subsector.firstSeg + i].startVertex]);
-    return polygon;
-}
 const game::loader::Sector &GetSector(const game::loader::SubSector &subsector, const game::loader::Level &level)
 {
     int side = 0;
@@ -28,7 +21,8 @@ const game::loader::Sector &GetSector(const game::loader::SubSector &subsector, 
         side = linedef.backSidedef;
     return level.sectors[level.sidedefs[side].sector];
 }
-void AddFloorCeil(game::system::MeshConstructor &FloorCeil, std::vector<glm::ivec2> &polygon, float height, bool ceil)
+void AddFloorCeil(game::system::MeshConstructor &FloorCeil, const std::vector<glm::vec2> &polygon, float height,
+                  bool ceil)
 {
     glm::uint32_t base = FloorCeil.vertices.size();
 
@@ -39,8 +33,7 @@ void AddFloorCeil(game::system::MeshConstructor &FloorCeil, std::vector<glm::ive
             FloorCeil.normals.push_back({0.f, -1.f, 0.f});
         else
             FloorCeil.normals.push_back({0.f, 1.f, 0.f});
-        FloorCeil.texcoord.push_back(
-            {static_cast<float>(pol.x) / 64.f, static_cast<float>(pol.y) / 64.f}); // au lieu de {0,0}
+        FloorCeil.texcoord.push_back({pol.x / 64.f, pol.y / 64.f});
     }
     for (uint32_t i = 1; i + 1 < polygon.size(); i++)
     {
@@ -56,14 +49,15 @@ std::map<std::string, Object::Component::Mesh> game::system::BuildFloorCeil(cons
 {
     std::map<std::string, Object::Component::Mesh> meshes;
     std::map<std::string, MeshConstructor> floorCeil;
-    std::vector<glm::ivec2> polygon;
+    std::vector<std::vector<glm::vec2>> polygons = BuildSubsectorPolygons(level);
 
-    for (const auto &subsector : level.subsectors)
+    for (std::size_t i = 0; i < level.subsectors.size(); i++)
     {
-        polygon = GetPolygon(subsector, level);
-        const game::loader::Sector &sector = GetSector(subsector, level);
-        AddFloorCeil(floorCeil[sector.ceilingTexture], polygon, static_cast<float>(sector.ceilingHeight), true);
-        AddFloorCeil(floorCeil[sector.floorTexture], polygon, static_cast<float>(sector.floorHeight), false);
+        if (polygons[i].empty()) // degenerate subsector, nothing to draw
+            continue;
+        const game::loader::Sector &sector = GetSector(level.subsectors[i], level);
+        AddFloorCeil(floorCeil[sector.ceilingTexture], polygons[i], static_cast<float>(sector.ceilingHeight), true);
+        AddFloorCeil(floorCeil[sector.floorTexture], polygons[i], static_cast<float>(sector.floorHeight), false);
     }
     for (auto &&[tex, flat] : floorCeil)
     {

@@ -101,6 +101,11 @@ engine_test("BuildWallsTests", {
 engine_test("BuildFloorCeilTests", {
     "tests/game/system/MeshSystem/BuildFloorCeilTests.cpp",
     "src/game/system/MeshSystem/BuildFloorCeil/BuildFloorCeil.cpp",
+    "src/game/system/MeshSystem/BuildFloorCeil/SubsectorPolygon.cpp",
+})
+engine_test("SubsectorPolygonTests", {
+    "tests/game/system/MeshSystem/SubsectorPolygonTests.cpp",
+    "src/game/system/MeshSystem/BuildFloorCeil/SubsectorPolygon.cpp",
 })
 engine_test("AssembleTextureTests", {
     "tests/utils/AssembleTexture/AssembleTextureTests.cpp",
@@ -118,6 +123,7 @@ local manual_tests = {
     ComputeMouseMovementTests = true,
     BuildWallsTests = true,
     BuildFloorCeilTests = true,
+    SubsectorPolygonTests = true,
     AssembleTextureTests = true,
 }
 
