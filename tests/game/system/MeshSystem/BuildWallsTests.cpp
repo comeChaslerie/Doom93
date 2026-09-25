@@ -52,6 +52,44 @@ void ExpectVec3(const glm::vec3 &v, float x, float y, float z)
     EXPECT_FLOAT_EQ(v.y, y);
     EXPECT_FLOAT_EQ(v.z, z);
 }
+
+// Two sectors joined by one two-sided linedef (0,0) -> (10,0), so the front
+// side faces map-south (world -z). Textures: front lower/upper = STEP/DROP,
+// back lower/upper = STEP_B/DROP_B.
+game::loader::Level MakeTwoSectorLevel(int frontFloor, int frontCeil, int backFloor, int backCeil)
+{
+    game::loader::Level level;
+    level.vertexes = {
+        {0,  0},
+        {10, 0}
+    };
+
+    game::loader::Sector frontSector;
+    frontSector.floorHeight = frontFloor;
+    frontSector.ceilingHeight = frontCeil;
+    game::loader::Sector backSector;
+    backSector.floorHeight = backFloor;
+    backSector.ceilingHeight = backCeil;
+    level.sectors = {frontSector, backSector};
+
+    game::loader::Sidedef front;
+    front.sector = 0;
+    front.lower = "STEP";
+    front.upper = "DROP";
+    game::loader::Sidedef back;
+    back.sector = 1;
+    back.lower = "STEP_B";
+    back.upper = "DROP_B";
+    level.sidedefs = {front, back};
+
+    game::loader::Linedef linedef;
+    linedef.startVertex = 0;
+    linedef.endVertex = 1;
+    linedef.frontSidedef = 0;
+    linedef.backSidedef = 1;
+    level.linedefs.push_back(linedef);
+    return level;
+}
 } // namespace
 
 TEST(BuildWalls, GroupedUnderSharedTexture)
@@ -128,7 +166,79 @@ TEST(BuildWalls, GroupsDifferentTexturesSeparately)
     EXPECT_EQ(meshes.at("WALL_B").GetVertices().size(), 4U);
 }
 
-TEST(BuildWalls, SkipsTwoSidedLinedefs)
+TEST(BuildWalls, LowerWallFacesTheLowerFloorSector)
+{
+    // Front floor below back floor: the step is seen from the front sector.
+    auto meshes = BuildWalls(MakeTwoSectorLevel(0, 100, 32, 100));
+
+    ASSERT_EQ(meshes.count("STEP"), 1U);
+    const auto &mesh = meshes.at("STEP");
+    ASSERT_EQ(mesh.GetVertices().size(), 4U);
+    ExpectVec3(mesh.GetVertices()[0], 0.f, 0.f, 0.f); // start, front floor
+    ExpectVec3(mesh.GetVertices()[1], 10.f, 0.f, 0.f);
+    ExpectVec3(mesh.GetVertices()[2], 10.f, 32.f, 0.f); // end, back floor
+    ExpectVec3(mesh.GetVertices()[3], 0.f, 32.f, 0.f);
+    ExpectVec3(mesh.GetNormals()[0], 0.f, 0.f, -1.f); // toward the front sector
+}
+
+TEST(BuildWalls, LowerWallUsesBackSidedefWhenBackIsLower)
+{
+    // Back floor below front floor: the back sidedef textures the step and the
+    // quad is flipped so its normal points toward the back sector.
+    auto meshes = BuildWalls(MakeTwoSectorLevel(32, 100, 0, 100));
+
+    EXPECT_EQ(meshes.count("STEP"), 0U);
+    ASSERT_EQ(meshes.count("STEP_B"), 1U);
+    const auto &mesh = meshes.at("STEP_B");
+    ASSERT_EQ(mesh.GetVertices().size(), 4U);
+    ExpectVec3(mesh.GetVertices()[0], 10.f, 0.f, 0.f); // flipped: starts at linedef end
+    ExpectVec3(mesh.GetVertices()[2], 0.f, 32.f, 0.f);
+    ExpectVec3(mesh.GetNormals()[0], 0.f, 0.f, 1.f); // toward the back sector
+}
+
+TEST(BuildWalls, UpperWallSpansTheCeilingDrop)
+{
+    // Front ceiling above back ceiling: the drop is seen from the front sector.
+    auto meshes = BuildWalls(MakeTwoSectorLevel(0, 100, 0, 64));
+
+    ASSERT_EQ(meshes.count("DROP"), 1U);
+    const auto &mesh = meshes.at("DROP");
+    ASSERT_EQ(mesh.GetVertices().size(), 4U);
+    ExpectVec3(mesh.GetVertices()[0], 0.f, 64.f, 0.f);   // start, back ceiling
+    ExpectVec3(mesh.GetVertices()[2], 10.f, 100.f, 0.f); // end, front ceiling
+    ExpectVec3(mesh.GetNormals()[0], 0.f, 0.f, -1.f);
+}
+
+TEST(BuildWalls, StepAndDropCanCoexistOnOneLinedef)
+{
+    // A door-like opening: raised floor AND lowered ceiling on the back side.
+    auto meshes = BuildWalls(MakeTwoSectorLevel(0, 100, 32, 64));
+
+    EXPECT_EQ(meshes.size(), 2U);
+    EXPECT_EQ(meshes.count("STEP"), 1U);
+    EXPECT_EQ(meshes.count("DROP"), 1U);
+}
+
+TEST(BuildWalls, EqualSectorsProduceNoHalfWall)
+{
+    auto meshes = BuildWalls(MakeTwoSectorLevel(0, 100, 0, 100));
+
+    EXPECT_TRUE(meshes.empty());
+}
+
+TEST(BuildWalls, MissingTextureProducesNoQuad)
+{
+    // "-" is the WAD marker for an absent texture: the height difference alone
+    // must not emit geometry.
+    auto level = MakeTwoSectorLevel(0, 100, 32, 100);
+    level.sidedefs[0].lower = "-";
+
+    auto meshes = BuildWalls(level);
+
+    EXPECT_TRUE(meshes.empty());
+}
+
+TEST(BuildWalls, TwoSidedWithEqualSectorsAddsNothing)
 {
     game::loader::Level level;
     level.vertexes = {
@@ -151,7 +261,7 @@ TEST(BuildWalls, SkipsTwoSidedLinedefs)
     solid.endVertex = 1;
     solid.frontSidedef = 0;
     solid.backSidedef = -1;
-    game::loader::Linedef opening; // deux faces -> ignore
+    game::loader::Linedef opening; // two-sided, same sector on both sides -> no half-wall
     opening.startVertex = 1;
     opening.endVertex = 2;
     opening.frontSidedef = 0;
@@ -160,7 +270,7 @@ TEST(BuildWalls, SkipsTwoSidedLinedefs)
 
     auto meshes = BuildWalls(level);
 
-    // Seul le mur solide -> 1 mesh, 1 quad.
+    // Only the solid wall emits geometry -> 1 mesh, 1 quad.
     EXPECT_EQ(meshes.size(), 1U);
     EXPECT_EQ(meshes.at("WALL").GetVertices().size(), 4U);
 }

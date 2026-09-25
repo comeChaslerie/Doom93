@@ -2,6 +2,8 @@
 #include "component/Mesh.hpp"
 #include "game/loader/LumpsData.hpp"
 #include "glm/geometric.hpp"
+#include <map>
+#include <string>
 #include <vector>
 
 namespace {
@@ -26,27 +28,57 @@ void AddIndices(game::system::MeshConstructor &walls)
 
     walls.indices.insert(walls.indices.end(), {base, base + 1, base + 2, base + 2, base + 3, base});
 }
-void AddVertices(game::system::MeshConstructor &walls, const glm::ivec2 &start, const glm::ivec2 &end,
-                 const game::loader::Level &level, const game::loader::Linedef &linedef)
+// One vertical quad between two heights, facing the right side of start -> end
+// (the Doom "front" side). "-" marks an absent texture in the WAD: no geometry.
+void AddWallQuad(std::map<std::string, game::system::MeshConstructor> &walls, const std::string &texture,
+                 const glm::ivec2 &start, const glm::ivec2 &end, float bottom, float top)
 {
-    float floor = static_cast<float>(level.sectors[level.sidedefs[linedef.frontSidedef].sector].floorHeight);
-    float ceil = static_cast<float>(level.sectors[level.sidedefs[linedef.frontSidedef].sector].ceilingHeight);
+    if (texture.empty() || texture == "-")
+        return;
+    game::system::MeshConstructor &wall = walls[texture];
 
-    walls.vertices.push_back(glm::vec3(start.x, floor, start.y));
-    walls.vertices.push_back(glm::vec3(end.x, floor, end.y));
-    walls.vertices.push_back(glm::vec3(end.x, ceil, end.y));
-    walls.vertices.push_back(glm::vec3(start.x, ceil, start.y));
+    AddIndices(wall);
+    wall.vertices.push_back(glm::vec3(start.x, bottom, start.y));
+    wall.vertices.push_back(glm::vec3(end.x, bottom, end.y));
+    wall.vertices.push_back(glm::vec3(end.x, top, end.y));
+    wall.vertices.push_back(glm::vec3(start.x, top, start.y));
+    AddNormal(start, end, wall.normals);
+    AddTextCoords(wall);
 }
-void AddNewWall(const game::loader::Level &level, const game::loader::Linedef &linedef,
-                game::system::MeshConstructor &walls)
+// A two-sided linedef joins two sectors: the floor step (lower) and the ceiling
+// drop (upper) each face the sector they are visible from, so the quad is
+// flipped (start/end swapped) when that sector is the back one.
+void AddHalfWalls(const game::loader::Level &level, const game::loader::Linedef &linedef,
+                  std::map<std::string, game::system::MeshConstructor> &walls)
 {
+    const game::loader::Sidedef &front = level.sidedefs[linedef.frontSidedef];
+    const game::loader::Sidedef &back = level.sidedefs[linedef.backSidedef];
+    const game::loader::Sector &frontSector = level.sectors[front.sector];
+    const game::loader::Sector &backSector = level.sectors[back.sector];
     glm::ivec2 start = level.vertexes[linedef.startVertex];
     glm::ivec2 end = level.vertexes[linedef.endVertex];
 
-    AddIndices(walls);
-    AddVertices(walls, start, end, level, linedef);
-    AddNormal(start, end, walls.normals);
-    AddTextCoords(walls);
+    if (frontSector.floorHeight < backSector.floorHeight)
+        AddWallQuad(walls, front.lower, start, end, static_cast<float>(frontSector.floorHeight),
+                    static_cast<float>(backSector.floorHeight));
+    else if (backSector.floorHeight < frontSector.floorHeight)
+        AddWallQuad(walls, back.lower, end, start, static_cast<float>(backSector.floorHeight),
+                    static_cast<float>(frontSector.floorHeight));
+    if (frontSector.ceilingHeight > backSector.ceilingHeight)
+        AddWallQuad(walls, front.upper, start, end, static_cast<float>(backSector.ceilingHeight),
+                    static_cast<float>(frontSector.ceilingHeight));
+    else if (backSector.ceilingHeight > frontSector.ceilingHeight)
+        AddWallQuad(walls, back.upper, end, start, static_cast<float>(frontSector.ceilingHeight),
+                    static_cast<float>(backSector.ceilingHeight));
+}
+void AddSolidWall(const game::loader::Level &level, const game::loader::Linedef &linedef,
+                  std::map<std::string, game::system::MeshConstructor> &walls)
+{
+    const game::loader::Sidedef &front = level.sidedefs[linedef.frontSidedef];
+    const game::loader::Sector &sector = level.sectors[front.sector];
+
+    AddWallQuad(walls, front.middle, level.vertexes[linedef.startVertex], level.vertexes[linedef.endVertex],
+                static_cast<float>(sector.floorHeight), static_cast<float>(sector.ceilingHeight));
 }
 } // namespace
 
@@ -56,8 +88,12 @@ std::map<std::string, Object::Component::Mesh> game::system::BuildWalls(const ga
     std::map<std::string, MeshConstructor> walls;
 
     for (const auto &linedef : level.linedefs)
+    {
         if (linedef.backSidedef < 0)
-            AddNewWall(level, linedef, walls[level.sidedefs[linedef.frontSidedef].middle]);
+            AddSolidWall(level, linedef, walls);
+        else
+            AddHalfWalls(level, linedef, walls);
+    }
     for (auto &[string, wall] : walls)
     {
         meshes[string].SetVertices(wall.vertices);
