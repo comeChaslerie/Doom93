@@ -3,6 +3,7 @@
 #include "game/plugin/MouseMovement/MouseMovementPlugin.hpp"
 #include "game/plugin/Movement/MovementPlugin.hpp"
 #include "plugin/PluginDefaultPipeline.hpp"
+#include "plugin/PluginPhysics.hpp"
 #include "plugin/PluginWindow.hpp"
 #include "resource/TextureContainer.hpp"
 #include "resource/Window.hpp"
@@ -34,7 +35,7 @@ void Startup(Engine::Core &core)
 void AddPlugins(Engine::Core &core)
 {
     core.AddPlugins<Window::Plugin, DefaultPipeline::Plugin, game::plugin::MouseMovementPlugin,
-        game::plugin::MovementPlugin>();
+                    game::plugin::MovementPlugin, Physics::Plugin>();
 }
 } // namespace
 
