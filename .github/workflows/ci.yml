@@ -196,7 +196,11 @@ jobs:
           xmake-version: latest
           actions-cache-folder: ".xmake-cache"
           actions-cache-key: "${{ matrix.os }}-tests"
-          build-cache: true
+          # xmake's build cache only restores object files, not the .gcno
+          # notes files that --coverage emits next to them, so gcovr fails on
+          # every object taken from the cache. Coverage is only measured on
+          # Linux, so the build cache is only enabled on macOS.
+          build-cache: ${{ !contains(runner.os, 'linux') }}
           build-cache-key: "${{ matrix.os }}-tests"
 
       - name: Run tests
