@@ -4,7 +4,8 @@
 #include "scheduler/FixedTimeUpdate.hpp"
 
 namespace {
-/// @brief Jolt recommends one collision step per 1/60 s, so a 1/35 s step needs two.
+/// @brief Number of sub-steps each physics update is split into, run one after the other (collision detection, then
+///   integration). Jolt recommends one per 1/60 s, so a 1/35 s tic needs two.
 constexpr int COLLISION_STEPS = 2;
 } // namespace
 
