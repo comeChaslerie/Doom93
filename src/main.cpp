@@ -9,6 +9,7 @@
 #include "resource/Window.hpp"
 #include "scheduler/Startup.hpp"
 #include "utils/CreateEnvironment/CreateEnvironment.hpp"
+#include "utils/InitGame/ConfigurePhysics.hpp"
 #include "utils/InitGame/ConfigureWindow.hpp"
 #include "utils/InitGame/InitPlayer.hpp"
 #include "utils/InitGame/LoadWad.hpp"
@@ -27,6 +28,7 @@ void Startup(Engine::Core &core)
 
         // Helpers
         utils::InitGame::ConfigureWindow(core, window);
+        utils::InitGame::ConfigurePhysics(core);
         utils::InitGame::InitPlayer(core, level, window);
         utils::CreateEnvironment::CreateWalls(core, level, lumpData, deviceContext, queue, textureContainer);
         utils::CreateEnvironment::CreateFloorAndCeiling(core, level, lumpData, deviceContext, queue, textureContainer);

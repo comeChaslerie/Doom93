@@ -33,7 +33,8 @@ void utils::InitGame::InitPlayer(Engine::Core &core, const game::loader::Level &
     player.AddComponent<Object::Component::Transform>(SetSpawn(level));
     player.AddComponent<Physics::Component::CapsuleCollider>(
         Physics::Component::CapsuleCollider::CreateFromHeight(56.f, 16.f));
-    player.AddComponent<Physics::Component::CharacterController>();
+    // Gravity follows Doom's rule, tic by tic (see game::system::ApplyGravity), instead of the engine's.
+    player.AddComponent<Physics::Component::CharacterController>().gravityFactor = 0.f;
     double posx = 0;
     glfwGetCursorPos(window, &(posx), nullptr);
     player.AddComponent<game::component::LastMousePos>(static_cast<float>(posx));
