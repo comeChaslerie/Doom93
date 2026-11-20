@@ -3,11 +3,13 @@
 #include "game/plugin/MouseMovement/MouseMovementPlugin.hpp"
 #include "game/plugin/Movement/MovementPlugin.hpp"
 #include "plugin/PluginDefaultPipeline.hpp"
+#include "plugin/PluginPhysics.hpp"
 #include "plugin/PluginWindow.hpp"
 #include "resource/TextureContainer.hpp"
 #include "resource/Window.hpp"
 #include "scheduler/Startup.hpp"
 #include "utils/CreateEnvironment/CreateEnvironment.hpp"
+#include "utils/InitGame/ConfigurePhysics.hpp"
 #include "utils/InitGame/ConfigureWindow.hpp"
 #include "utils/InitGame/InitPlayer.hpp"
 #include "utils/InitGame/LoadWad.hpp"
@@ -26,6 +28,7 @@ void Startup(Engine::Core &core)
 
         // Helpers
         utils::InitGame::ConfigureWindow(core, window);
+        utils::InitGame::ConfigurePhysics(core);
         utils::InitGame::InitPlayer(core, level, window);
         utils::CreateEnvironment::CreateWalls(core, level, lumpData, deviceContext, queue, textureContainer);
         utils::CreateEnvironment::CreateFloorAndCeiling(core, level, lumpData, deviceContext, queue, textureContainer);
@@ -34,7 +37,7 @@ void Startup(Engine::Core &core)
 void AddPlugins(Engine::Core &core)
 {
     core.AddPlugins<Window::Plugin, DefaultPipeline::Plugin, game::plugin::MouseMovementPlugin,
-                    game::plugin::MovementPlugin>();
+                    game::plugin::MovementPlugin, Physics::Plugin>();
 }
 } // namespace
 
@@ -44,8 +47,8 @@ int main()
 
     if (!utils::InitGame::LoadWad(core, "freedoom/freedoom1.wad"))
         return 84;
-    Startup(core);
     AddPlugins(core);
+    Startup(core);
     core.Run();
     return 0;
 }

@@ -1,21 +1,39 @@
 #include "utils/CreateEnvironment/CreateEnvironment.hpp"
 #include "component/Material.hpp"
+#include "component/Mesh.hpp"
+#include "component/MeshCollider.hpp"
+#include "component/RigidBody.hpp"
 #include "component/Transform.hpp"
 #include "entity/Entity.hpp"
 #include "game/loader/LumpsData.hpp"
 #include "game/system/MeshSystem/BuildFloorCeil/BuildFloorCeil.hpp"
 #include "game/system/MeshSystem/BuildWalls/BuildWalls.hpp"
 #include "glm/ext/vector_uint2.hpp"
+#include "glm/fwd.hpp"
 #include "resource/DeviceContext.hpp"
 #include "resource/Queue.hpp"
 #include "resource/Texture.hpp"
 #include "resource/TextureContainer.hpp"
 #include "utils/AssembleTexture/AssembleTexture.hpp"
 #include <algorithm>
+#include <cstddef>
 
 namespace {
 static constexpr glm::uvec2 textureSize = glm::uvec2(64, 64);
+Object::Component::Mesh DoubleSide(const Object::Component::Mesh &mesh)
+{
+    Object::Component::Mesh doubleSided = mesh;
+    std::vector<uint32_t> newIndices = mesh.GetIndices();
+    const size_t nb_indices = newIndices.size();
+
+    for (size_t index = 0; index + 2 < nb_indices; index += 3)
+    {
+        newIndices.insert(newIndices.end(), {newIndices[index], newIndices[index + 2], newIndices[index + 1]});
+    }
+    doubleSided.SetIndices(newIndices);
+    return doubleSided;
 }
+} // namespace
 
 /// @brief Create Walls meshes
 void utils::CreateEnvironment::CreateWalls(Engine::Core &core, const game::loader::Level &level,
@@ -34,6 +52,10 @@ void utils::CreateEnvironment::CreateWalls(Engine::Core &core, const game::loade
         auto walls = core.CreateEntity();
         walls.AddComponent<Object::Component::Transform>();
         walls.AddComponent<Object::Component::Mesh>(mesh);
+        Physics::Component::MeshCollider collider;
+        collider.mesh = DoubleSide(mesh);
+        walls.AddComponent<Physics::Component::MeshCollider>(collider);
+        walls.AddComponent<Physics::Component::RigidBody>(Physics::Component::RigidBody::CreateStatic());
         glm::uvec2 size(assembled.width, assembled.height);
         auto texture = Graphic::Resource::Texture(deviceContext, queue, tex, size, [&assembled](glm::uvec2 p) {
             return assembled.pixels[p.y * assembled.width + p.x];
@@ -61,6 +83,10 @@ void utils::CreateEnvironment::CreateFloorAndCeiling(Engine::Core &core, const g
         auto entity = core.CreateEntity();
         entity.AddComponent<Object::Component::Transform>();
         entity.AddComponent<Object::Component::Mesh>(mesh);
+        Physics::Component::MeshCollider collider;
+        collider.mesh = DoubleSide(mesh);
+        entity.AddComponent<Physics::Component::MeshCollider>(collider);
+        entity.AddComponent<Physics::Component::RigidBody>(Physics::Component::RigidBody::CreateStatic());
         auto texture = Graphic::Resource::Texture(deviceContext, queue, tex, textureSize, [&flat](glm::uvec2 pixel) {
             return flat->pixels[pixel.y * 64 + pixel.x];
         });

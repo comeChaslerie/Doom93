@@ -2,10 +2,12 @@
 #include "GLFW/glfw3.h"
 #include "game/component/Keys/KeysType.hpp"
 #include "game/ressources/Keys/Keys.hpp"
+#include "game/system/Gravity/ApplyGravity.hpp"
 #include "game/system/Movement/ApplyMovement.hpp"
 #include "game/system/Movement/ComputeMovement.hpp"
 #include "game/system/Movement/UpdateKeysState.hpp"
 #include "plugin/PluginInput.hpp"
+#include "scheduler/FixedTimeUpdate.hpp"
 #include "scheduler/Update.hpp"
 
 namespace game::plugin {
@@ -19,5 +21,6 @@ void MovementPlugin::Bind()
     RequirePlugins<Input::Plugin>();
     RegisterSystems<Engine::Scheduler::Update>(system::UpdateKeysState, system::ComputeMovement,
                                                game::system::ApplyMovement);
+    RegisterSystems<Engine::Scheduler::FixedTimeUpdate>(system::ApplyGravity);
 }
 } // namespace game::plugin

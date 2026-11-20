@@ -1,3 +1,4 @@
+#include "component/CharacterController.hpp"
 #include "component/Transform.hpp"
 #include "core/Core.hpp"
 #include "entity/Entity.hpp"
@@ -14,6 +15,7 @@ using game::component::Stat;
 using game::component::Velocity;
 using game::system::ApplyMovement;
 using Object::Component::Transform;
+using Physics::Component::CharacterController;
 
 namespace {
 // La resource Time existe deja (creee par le Core) ; on fixe un delta deterministe.
@@ -126,4 +128,29 @@ TEST(ApplyMovement, AccumulatesOverMultipleFrames)
 
     // 3 * (1 * 0.25 * 4) = 3
     EXPECT_FLOAT_EQ(PositionOf(core, entity.Id()).x, 3.f);
+}
+
+TEST(ApplyMovement, CharacterControllerMovesThroughItsVelocity)
+{
+    Engine::Core core;
+    SetDeltaTime(core, 0.5f);
+
+    // Le plugin physique reecrit le Transform d'un CharacterController a chaque tick :
+    // le deplacement passe par sa vitesse, et l'axe vertical reste a la gravite.
+    auto entity = core.CreateEntity();
+    entity.AddComponent<Transform>(glm::vec3(1.f, 2.f, 3.f));
+    entity.AddComponent<Velocity>(glm::vec3(1.f, 5.f, -2.f));
+    entity.AddComponent<Speed>(Stat<float>(10.f));
+    auto &controller = entity.AddComponent<CharacterController>();
+    controller.linearVelocity = glm::vec3(0.f, -7.f, 0.f);
+
+    ApplyMovement(core);
+
+    EXPECT_FLOAT_EQ(controller.linearVelocity.x, 10.f);
+    EXPECT_FLOAT_EQ(controller.linearVelocity.y, -7.f);
+    EXPECT_FLOAT_EQ(controller.linearVelocity.z, -20.f);
+    const glm::vec3 &pos = PositionOf(core, entity.Id());
+    EXPECT_FLOAT_EQ(pos.x, 1.f);
+    EXPECT_FLOAT_EQ(pos.y, 2.f);
+    EXPECT_FLOAT_EQ(pos.z, 3.f);
 }
