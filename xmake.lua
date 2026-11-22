@@ -142,6 +142,11 @@ map_test("PointInSectorTests", {
     "src/game/loader/WADReaderParse.cpp",
     "src/utils/FileReader/FileReader.cpp",
 })
+map_test("ComputeFloorHeightTests", {
+    "tests/game/system/StepUp/ComputeFloorHeightTests.cpp",
+    "src/game/system/StepUp/ComputeFloorHeight.cpp",
+    "src/game/system/Map/PointInSector.cpp",
+})
 
 local manual_tests = {
     WadLoaderTests = true,
@@ -157,6 +162,7 @@ local manual_tests = {
     SubsectorPolygonTests = true,
     AssembleTextureTests = true,
     PointInSectorTests = true,
+    ComputeFloorHeightTests = true,
 }
 
 for _, file in ipairs(os.files("tests/**.cpp")) do
