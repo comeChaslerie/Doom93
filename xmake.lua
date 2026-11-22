@@ -102,6 +102,7 @@ engine_test("BuildFloorCeilTests", {
     "tests/game/system/MeshSystem/BuildFloorCeilTests.cpp",
     "src/game/system/MeshSystem/BuildFloorCeil/BuildFloorCeil.cpp",
     "src/game/system/MeshSystem/BuildFloorCeil/SubsectorPolygon.cpp",
+    "src/game/system/Map/PointInSector.cpp",
 })
 engine_test("SubsectorPolygonTests", {
     "tests/game/system/MeshSystem/SubsectorPolygonTests.cpp",
@@ -110,6 +111,36 @@ engine_test("SubsectorPolygonTests", {
 engine_test("AssembleTextureTests", {
     "tests/utils/AssembleTexture/AssembleTextureTests.cpp",
     "src/utils/AssembleTexture/AssembleTexture.cpp",
+})
+
+-- Pure map queries: no engine, but glm and several translation units. PointInSectorTests
+-- also walks the BSP of the WAD fixture, hence the loader and the project rundir.
+local function map_test(name, srcs)
+    target(name)
+        set_kind("binary")
+        set_group("test")
+        set_default(false)
+        set_languages("c++20")
+        add_packages("gtest", "glm")
+        add_links("gtest")
+        add_tests("default")
+        add_includedirs("src/")
+        add_files("tests/main.cpp")
+        for _, src in ipairs(srcs) do
+            add_files(src)
+        end
+        set_rundir("$(projectdir)")
+    target_end()
+end
+
+map_test("PointInSectorTests", {
+    "tests/game/system/Map/PointInSectorTests.cpp",
+    "src/game/system/Map/PointInSector.cpp",
+    "src/game/system/MeshSystem/BuildFloorCeil/SubsectorPolygon.cpp",
+    "src/game/loader/WadLoader.cpp",
+    "src/game/loader/WADReader.cpp",
+    "src/game/loader/WADReaderParse.cpp",
+    "src/utils/FileReader/FileReader.cpp",
 })
 
 local manual_tests = {
@@ -125,6 +156,7 @@ local manual_tests = {
     BuildFloorCeilTests = true,
     SubsectorPolygonTests = true,
     AssembleTextureTests = true,
+    PointInSectorTests = true,
 }
 
 for _, file in ipairs(os.files("tests/**.cpp")) do
