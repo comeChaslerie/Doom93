@@ -1,6 +1,7 @@
 #include "game/system/MeshSystem/BuildFloorCeil/BuildFloorCeil.hpp"
 #include "component/Mesh.hpp"
 #include "game/loader/LumpsData.hpp"
+#include "game/system/Map/PointInSector.hpp"
 #include "game/system/MeshSystem/BuildFloorCeil/SubsectorPolygon.hpp"
 #include "game/system/MeshSystem/BuildWalls/BuildWalls.hpp"
 #include "glm/fwd.hpp"
@@ -9,18 +10,6 @@
 #include <vector>
 
 namespace {
-const game::loader::Sector &GetSector(const game::loader::SubSector &subsector, const game::loader::Level &level)
-{
-    int side = 0;
-    const game::loader::Seg &first_seg = level.segs[subsector.firstSeg];
-    const game::loader::Linedef &linedef = level.linedefs[first_seg.linedef];
-
-    if (first_seg.direction == 0)
-        side = linedef.frontSidedef;
-    else
-        side = linedef.backSidedef;
-    return level.sectors[level.sidedefs[side].sector];
-}
 void AddFloorCeil(game::system::MeshConstructor &FloorCeil, const std::vector<glm::vec2> &polygon, float height,
                   bool ceil)
 {
@@ -55,7 +44,7 @@ std::map<std::string, Object::Component::Mesh> game::system::BuildFloorCeil(cons
     {
         if (polygons[i].empty()) // degenerate subsector, nothing to draw
             continue;
-        const game::loader::Sector &sector = GetSector(level.subsectors[i], level);
+        const game::loader::Sector &sector = GetSubsectorSector(level, level.subsectors[i]);
         AddFloorCeil(floorCeil[sector.ceilingTexture], polygons[i], static_cast<float>(sector.ceilingHeight), true);
         AddFloorCeil(floorCeil[sector.floorTexture], polygons[i], static_cast<float>(sector.floorHeight), false);
     }

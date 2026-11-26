@@ -6,6 +6,7 @@
 #include "game/system/Movement/ApplyMovement.hpp"
 #include "game/system/Movement/ComputeMovement.hpp"
 #include "game/system/Movement/UpdateKeysState.hpp"
+#include "game/system/StepUp/ApplyStepUp.hpp"
 #include "plugin/PluginInput.hpp"
 #include "scheduler/FixedTimeUpdate.hpp"
 #include "scheduler/Update.hpp"
@@ -21,6 +22,8 @@ void MovementPlugin::Bind()
     RequirePlugins<Input::Plugin>();
     RegisterSystems<Engine::Scheduler::Update>(system::UpdateKeysState, system::ComputeMovement,
                                                game::system::ApplyMovement);
-    RegisterSystems<Engine::Scheduler::FixedTimeUpdate>(system::ApplyGravity);
+    // In this order, before the physics plugin's own update moves the characters: gravity reads the floor of the last
+    // tic, then ApplyStepUp replaces it with the floor of this one.
+    RegisterSystems<Engine::Scheduler::FixedTimeUpdate>(system::ApplyGravity, system::ApplyStepUp);
 }
 } // namespace game::plugin

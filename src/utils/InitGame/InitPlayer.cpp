@@ -6,6 +6,7 @@
 #include "component/Transform.hpp"
 #include "core/Core.hpp"
 #include "entity/Entity.hpp"
+#include "game/component/Floor.hpp"
 #include "game/component/MouseMovement/LastMousePos.hpp"
 #include "game/component/MouseMovement/Sensibility.hpp"
 #include "game/component/Speed.hpp"
@@ -33,8 +34,12 @@ void utils::InitGame::InitPlayer(Engine::Core &core, const game::loader::Level &
     player.AddComponent<Object::Component::Transform>(SetSpawn(level));
     player.AddComponent<Physics::Component::CapsuleCollider>(
         Physics::Component::CapsuleCollider::CreateFromHeight(56.f, 16.f));
-    // Gravity follows Doom's rule, tic by tic (see game::system::ApplyGravity), instead of the engine's.
-    player.AddComponent<Physics::Component::CharacterController>().gravityFactor = 0.f;
+    // Gravity and steps follow Doom's rules, tic by tic (see game::system::ApplyGravity and ApplyStepUp), instead of
+    // the engine's: a step height of 0 turns off Jolt's own stair walking and floor sticking.
+    auto &controller = player.AddComponent<Physics::Component::CharacterController>();
+    controller.gravityFactor = 0.f;
+    controller.maxStepHeight = 0.f;
+    player.AddComponent<game::component::Floor>();
     double posx = 0;
     glfwGetCursorPos(window, &(posx), nullptr);
     player.AddComponent<game::component::LastMousePos>(static_cast<float>(posx));
